@@ -1,6 +1,5 @@
 package me.ichun.mods.portalgunclassic.common.entity;
 
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.block.BlockPortal;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
@@ -41,7 +40,7 @@ public class EntityPortalProjectile extends Entity
 
     public EntityPortalProjectile(Level world, Entity entity, boolean isOrange)
     {
-        this(PGCRegistries.PORTAL_PROJECTILE.get(), world);
+        this(PortalGunClassic.PORTAL_PROJECTILE.get(), world);
         this.setOrange(isOrange);
         shoot(entity, 4.999F);
         moveTo(entity.getX(), entity.getEyeY() - (this.getBbWidth() / 2F), entity.getZ(), entity.getYRot(), entity.getXRot());
@@ -118,9 +117,12 @@ public class EntityPortalProjectile extends Entity
 
         age++;
 
-        this.xo = this.getX();
-        this.yo = this.getY();
-        this.zo = this.getZ();
+        /*
+        this.lastTickPosX = this.posX;
+        this.lastTickPosY = this.posY;
+        this.lastTickPosZ = this.posZ;
+         */
+        this.setOldPosAndRot();
 
         super.tick();
 
@@ -325,7 +327,7 @@ public class EntityPortalProjectile extends Entity
             {
                 PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel)level).kill(level, isOrange());
 
-                level.setBlockAndUpdate(pos, PGCRegistries.BLOCK_PORTAL.get().defaultBlockState());
+                level.setBlockAndUpdate(pos, PortalGunClassic.BLOCK_PORTAL.get().defaultBlockState());
                 BlockEntity te = level.getBlockEntity(pos);
                 if(te instanceof TileEntityPortal)
                 {
@@ -333,7 +335,7 @@ public class EntityPortalProjectile extends Entity
                 }
                 if(rayTraceResult.getDirection().getAxis() != Direction.Axis.Y)
                 {
-                    level.setBlockAndUpdate(pos.below(), PGCRegistries.BLOCK_PORTAL.get().defaultBlockState());
+                    level.setBlockAndUpdate(pos.below(), PortalGunClassic.BLOCK_PORTAL.get().defaultBlockState());
                     te = level.getBlockEntity(pos.below());
                     if(te instanceof TileEntityPortal)
                     {
@@ -342,11 +344,11 @@ public class EntityPortalProjectile extends Entity
                 }
                 PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) level).set(level, isOrange(), rayTraceResult.getDirection().getAxis() != Direction.Axis.Y ? pos.below() : pos);
 
-                level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), isOrange() ? PGCRegistries.OPEN_RED.get() : PGCRegistries.OPEN_BLUE.get(), SoundSource.BLOCKS, 0.3F, 1.0F);
+                level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), isOrange() ? SoundRegistry.OPEN_RED.get() : SoundRegistry.OPEN_BLUE.get(), SoundSource.BLOCKS, 0.3F, 1.0F);
             }
             else
             {
-                level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), PGCRegistries.INVALID.get(), SoundSource.NEUTRAL, 0.5F, 1.0F);
+                level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), SoundRegistry.INVALID.get(), SoundSource.NEUTRAL, 0.5F, 1.0F);
             }
         }
     }

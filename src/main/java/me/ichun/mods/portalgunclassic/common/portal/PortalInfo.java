@@ -1,19 +1,12 @@
 package me.ichun.mods.portalgunclassic.common.portal;
 
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
 import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.Level;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class PortalInfo
@@ -44,7 +37,7 @@ public class PortalInfo
                 }
             }
 
-            world.playSound(null, pos.getX() + (portal.face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), pos.getY() + (portal.face.getAxis() == Direction.Axis.Y ? 0.0D : 0.5D), pos.getZ() + (portal.face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), PGCRegistries.FIZZLE.get(), SoundSource.BLOCKS, 0.3F, 1F);
+            world.playSound(null, pos.getX() + (portal.face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), pos.getY() + (portal.face.getAxis() == Direction.Axis.Y ? 0.0D : 0.5D), pos.getZ() + (portal.face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), SoundRegistry.FIZZLE.get(), SoundSource.BLOCKS, 0.3F, 1F);
         }
         else
         {

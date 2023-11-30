@@ -3,49 +3,26 @@ package me.ichun.mods.portalgunclassic.common.sounds;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class SoundRegistry
 {
-    public static SoundEvent enter;
-    public static SoundEvent exit;
-    public static SoundEvent fizzle;
-    public static SoundEvent invalid;
-    public static SoundEvent openblue;
-    public static SoundEvent openred;
-    public static SoundEvent fireblue;
-    public static SoundEvent firered;
-    public static SoundEvent reset;
-    public static SoundEvent active;
 
-    public static boolean init = false;
+    public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, PortalGunClassic.MOD_ID);
+    public static final RegistryObject<SoundEvent> ENTER = register("enter");
+    public static final RegistryObject<SoundEvent> EXIT = register("exit");
+    public static final RegistryObject<SoundEvent> FIZZLE = register("fizzle");
+    public static final RegistryObject<SoundEvent> INVALID = register("invalid");
+    public static final RegistryObject<SoundEvent> OPEN_BLUE = register("openblue");
+    public static final RegistryObject<SoundEvent> OPEN_RED = register("openred");
+    public static final RegistryObject<SoundEvent> FIRE_BLUE = register("fireblue");
+    public static final RegistryObject<SoundEvent> FIRE_RED = register("firered");
+    public static final RegistryObject<SoundEvent> RESET = register("reset");
+    public static final RegistryObject<SoundEvent> ACTIVE = register("active");
 
-    public static void init(IForgeRegistry<SoundEvent> registry)
-    {
-        if(!init)
-        {
-            init = true;
-
-            enter = register(registry, "enter");
-            exit = register(registry, "exit");
-            fizzle = register(registry, "fizzle");
-            invalid = register(registry, "invalid");
-            openblue = register(registry, "openblue");
-            openred = register(registry, "openred");
-            fireblue = register(registry, "fireblue");
-            firered = register(registry, "firered");
-            reset = register(registry, "reset");
-            active = register(registry, "active");
-        }
-    }
-
-    private static SoundEvent register(IForgeRegistry<SoundEvent> registry, String name)
-    {
-        ResourceLocation rs = new ResourceLocation(PortalGunClassic.MOD_ID, name);
-        SoundEvent event = new SoundEvent(rs).setRegistryName(rs);
-        registry.register(event);
-        return event;
+    private static RegistryObject<SoundEvent> register(String path){
+        return SOUNDS.register(path, () -> new SoundEvent(new ResourceLocation(PortalGunClassic.MOD_ID, path)));
     }
 }

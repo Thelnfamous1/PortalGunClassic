@@ -1,15 +1,14 @@
 package me.ichun.mods.portalgunclassic.common.packet;
 
 import io.netty.buffer.ByteBuf;
+import me.Thelnfamous1.portalgunclassic.IMessage;
+import me.Thelnfamous1.portalgunclassic.IMessageHandler;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
 import net.minecraft.world.entity.Entity;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 public class PacketEntityLocation implements IMessage
 {
@@ -30,33 +29,33 @@ public class PacketEntityLocation implements IMessage
     public float prevPitch;
     public float yaw;
     public float pitch;
+    private static final PacketEntityLocation.Handler HANDLER = new PacketEntityLocation.Handler();
 
     public PacketEntityLocation()
     {}
 
     public PacketEntityLocation(Entity ent)
     {
-        id = ent.getEntityId();
-        ltX = ent.lastTickPosX;
-        ltY = ent.lastTickPosY;
-        ltZ = ent.lastTickPosZ;
-        prevX = ent.prevPosX;
-        prevY = ent.prevPosY;
-        prevZ = ent.prevPosZ;
-        posX = ent.posX;
-        posY = ent.posY;
-        posZ = ent.posZ;
-        mX = ent.motionX;
-        mY = ent.motionY;
-        mZ = ent.motionZ;
-        prevYaw = ent.prevRotationYaw;
-        prevPitch = ent.prevRotationPitch;
-        yaw = ent.rotationYaw;
-        pitch = ent.rotationPitch;
+        id = ent.getId();
+        ltX = ent.xo;
+        ltY = ent.yo;
+        ltZ = ent.zo;
+        prevX = ent.xOld;
+        prevY = ent.yOld;
+        prevZ = ent.zOld;
+        posX = ent.getX();
+        posY = ent.getY();
+        posZ = ent.getZ();
+        mX = ent.getDeltaMovement().x;
+        mY = ent.getDeltaMovement().y;
+        mZ = ent.getDeltaMovement().z;
+        prevYaw = ent.yRotO;
+        prevPitch = ent.xRotO;
+        yaw = ent.getYRot();
+        pitch = ent.getXRot();
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf)
+    public PacketEntityLocation(ByteBuf buf)
     {
         id = buf.readInt();
         ltX = buf.readDouble();
@@ -99,44 +98,55 @@ public class PacketEntityLocation implements IMessage
         buf.writeFloat(pitch);
     }
 
-    public static class Handler implements IMessageHandler<PacketEntityLocation, IMessage>
+    @Override
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> HANDLER.onMessage(this, ctx));
+        ctx.get().setPacketHandled(true);
+    }
+
+    public static class Handler implements IMessageHandler<PacketEntityLocation>
     {
         @Override
-        public IMessage onMessage(PacketEntityLocation message, MessageContext ctx)
+        public void onMessage(PacketEntityLocation message, Supplier<NetworkEvent.Context> ctx)
         {
             handleClient(message);
-            return null;
         }
 
-        @SideOnly(Side.CLIENT)
         public void handleClient(PacketEntityLocation message)
         {
-            Entity ent = Minecraft.getMinecraft().world.getEntityByID(message.id);
+            Entity ent = Minecraft.getInstance().level.getEntity(message.id);
             if(ent != null)
             {
-                ent.lastTickPosX = message.ltX;
-                ent.lastTickPosY = message.ltY;
-                ent.lastTickPosZ = message.ltZ;
-                ent.prevPosX = message.prevX;
-                ent.prevPosY = message.prevY;
-                ent.prevPosZ = message.prevZ;
+
+                /*
                 ent.posX = message.posX;
                 ent.posY = message.posY;
                 ent.posZ = message.posZ;
                 ent.motionX = message.mX;
                 ent.motionY = message.mY;
                 ent.motionZ = message.mZ;
-                ent.prevRotationYaw = message.prevYaw;
-                ent.prevRotationPitch = message.prevPitch;
+                 */
+                ent.absMoveTo(message.posX, message.posY, message.posZ, message.yaw, message.pitch);
+                ent.lerpMotion(message.mX, message.mY, message.mZ);
+                ent.xo = message.ltX;
+                ent.yo = message.ltY;
+                ent.zo = message.ltZ;
+                ent.xOld = message.prevX;
+                ent.yOld = message.prevY;
+                ent.zOld = message.prevZ;
+                ent.yRotO = message.prevYaw;
+                ent.xRotO = message.prevPitch;
+                /*
                 ent.rotationYaw = message.yaw;
                 ent.rotationPitch = message.pitch;
+                 */
 
                 if(ent == Minecraft.getInstance().player)
                 {
                     PortalGunClassic.eventHandlerClient.justTeleported = true;
-                    PortalGunClassic.eventHandlerClient.mX = ent.motionX;
-                    PortalGunClassic.eventHandlerClient.mY = ent.motionY;
-                    PortalGunClassic.eventHandlerClient.mZ = ent.motionZ;
+                    PortalGunClassic.eventHandlerClient.mX = ent.getDeltaMovement().x;
+                    PortalGunClassic.eventHandlerClient.mY = ent.getDeltaMovement().y;
+                    PortalGunClassic.eventHandlerClient.mZ = ent.getDeltaMovement().z;
                 }
             }
         }

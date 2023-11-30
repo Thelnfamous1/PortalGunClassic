@@ -1,19 +1,13 @@
 package me.ichun.mods.portalgunclassic.common.core;
 
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
-import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
 import me.ichun.mods.portalgunclassic.common.packet.PacketEntityLocation;
 import me.ichun.mods.portalgunclassic.common.packet.PacketPortalStatus;
 import me.ichun.mods.portalgunclassic.common.packet.PacketRequestTeleport;
 import me.ichun.mods.portalgunclassic.common.packet.PacketSwapType;
-import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 
@@ -39,10 +33,14 @@ public class ProxyCommon
                 PROTOCOL_VERSION::equals,
                 PROTOCOL_VERSION::equals
         );
-        PortalGunClassic.channel.registerMessage(0, PacketSwapType.class, new PacketSwapType.Handler(), Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        PortalGunClassic.channel.registerMessage(1, PacketPortalStatus.class, new PacketPortalStatus.Handler(), Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        PortalGunClassic.channel.registerMessage(2, PacketRequestTeleport.class, new PacketRequestTeleport.Handler(), Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        PortalGunClassic.channel.registerMessage(3, PacketEntityLocation.class, new PacketEntityLocation.Handler(), Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        MinecraftForge.EVENT_BUS.addListener((FMLCommonSetupEvent event) -> {
+            event.enqueueWork(() -> {
+                PortalGunClassic.channel.registerMessage(0, PacketSwapType.class, PacketSwapType::toBytes, PacketSwapType::new, PacketSwapType::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+                PortalGunClassic.channel.registerMessage(1, PacketPortalStatus.class, PacketPortalStatus::toBytes, PacketPortalStatus::new, PacketPortalStatus::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+                PortalGunClassic.channel.registerMessage(2, PacketRequestTeleport.class, PacketRequestTeleport::toBytes, PacketRequestTeleport::new, PacketRequestTeleport::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+                PortalGunClassic.channel.registerMessage(3, PacketEntityLocation.class, PacketEntityLocation::toBytes, PacketEntityLocation::new, PacketEntityLocation::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+            });
+        });
 
 
     }

@@ -1,16 +1,19 @@
 package me.ichun.mods.portalgunclassic.common.packet;
 
 import io.netty.buffer.ByteBuf;
+import me.Thelnfamous1.portalgunclassic.IMessage;
+import me.Thelnfamous1.portalgunclassic.IMessageHandler;
 import me.ichun.mods.portalgunclassic.client.portal.PortalStatus;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 public class PacketPortalStatus implements IMessage
 {
     public boolean blue;
     public boolean orange;
+    private static final PacketPortalStatus.Handler HANDLER = new PacketPortalStatus.Handler();
 
     public PacketPortalStatus()
     {}
@@ -21,8 +24,7 @@ public class PacketPortalStatus implements IMessage
         this.orange = orange;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf)
+    public PacketPortalStatus(ByteBuf buf)
     {
         blue = buf.readBoolean();
         orange = buf.readBoolean();
@@ -35,13 +37,18 @@ public class PacketPortalStatus implements IMessage
         buf.writeBoolean(orange);
     }
 
-    public static class Handler implements IMessageHandler<PacketPortalStatus, IMessage>
+    @Override
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> HANDLER.onMessage(this, ctx));
+        ctx.get().setPacketHandled(true);
+    }
+
+    public static class Handler implements IMessageHandler<PacketPortalStatus>
     {
         @Override
-        public IMessage onMessage(PacketPortalStatus message, MessageContext ctx)
+        public void onMessage(PacketPortalStatus message, Supplier<NetworkEvent.Context> ctx)
         {
             PortalGunClassic.eventHandlerClient.status = new PortalStatus(message.blue, message.orange);
-            return null;
         }
     }
 }

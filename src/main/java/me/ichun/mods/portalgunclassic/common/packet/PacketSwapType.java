@@ -1,22 +1,23 @@
 package me.ichun.mods.portalgunclassic.common.packet;
 
 import io.netty.buffer.ByteBuf;
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
+import me.Thelnfamous1.portalgunclassic.IMessage;
+import me.Thelnfamous1.portalgunclassic.IMessageHandler;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundCategory;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 public class PacketSwapType implements IMessage
 {
     public boolean reset;
     public int type;
+    private static final PacketSwapType.Handler HANDLER = new PacketSwapType.Handler();
 
     public PacketSwapType()
     {}
@@ -27,8 +28,7 @@ public class PacketSwapType implements IMessage
         this.type = type;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf)
+    public PacketSwapType(ByteBuf buf)
     {
         reset = buf.readBoolean();
         type = buf.readInt();
@@ -41,20 +41,26 @@ public class PacketSwapType implements IMessage
         buf.writeInt(type);
     }
 
-    public static class Handler implements IMessageHandler<PacketSwapType, IMessage>
+    @Override
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> HANDLER.onMessage(this, ctx));
+        ctx.get().setPacketHandled(true);
+    }
+
+    public static class Handler implements IMessageHandler<PacketSwapType>
     {
         @Override
-        public IMessage onMessage(PacketSwapType message, MessageContext ctx)
+        public void onMessage(PacketSwapType message, Supplier<NetworkEvent.Context> ctx)
         {
-            EntityPlayerMP player = ctx.getServerHandler().player;
+            ServerPlayer player = ctx.get().getSender();
             if(!message.reset)
             {
-                for(EnumHand hand : EnumHand.values())
+                for(InteractionHand hand : InteractionHand.values())
                 {
-                    ItemStack is = player.getHeldItem(hand);
-                    if(is.getItem() == PGCRegistries.PORTAL_GUN.get())
+                    ItemStack is = player.getItemInHand(hand);
+                    if(is.getItem() == PortalGunClassic.PORTAL_GUN.get())
                     {
-                        is.setItemDamage(is.getItemDamage() == 1 ? 0 : 1);
+                        is.setDamageValue(is.getDamageValue() == 1 ? 0 : 1);
                     }
                 }
             }
@@ -62,23 +68,22 @@ public class PacketSwapType implements IMessage
             {
                 if(message.type == 0)
                 {
-                    PortalGunClassic.eventHandlerServer.getSaveData(player.world).kill(player.world, false);
-                    PortalGunClassic.eventHandlerServer.getSaveData(player.world).kill(player.world, true);
+                    PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).kill(player.level, false);
+                    PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).kill(player.level, true);
                 }
                 else
                 {
-                    for(EnumHand hand : EnumHand.values())
+                    for(InteractionHand hand : InteractionHand.values())
                     {
-                        ItemStack is = player.getHeldItem(hand);
-                        if(is.getItem() == PGCRegistries.PORTAL_GUN.get())
+                        ItemStack is = player.getItemInHand(hand);
+                        if(is.getItem() == PortalGunClassic.PORTAL_GUN.get())
                         {
-                            PortalGunClassic.eventHandlerServer.getSaveData(player.world).kill(player.world, is.getItemDamage() == 1);
+                            PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).kill(player.level, is.getDamageValue() == 1);
                         }
                     }
                 }
-                player.getEntityWorld().playSound(null, player.posX, player.posY + player.getEyeHeight(), player.posZ, PGCRegistries.RESET.get(), SoundSource.PLAYERS, 0.3F, 1.0F);
+                player.getLevel().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundRegistry.RESET.get(), SoundSource.PLAYERS, 0.3F, 1.0F);
             }
-            return null;
         }
     }
 }

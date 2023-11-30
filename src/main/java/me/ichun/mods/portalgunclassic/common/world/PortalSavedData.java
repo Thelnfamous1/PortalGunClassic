@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraftforge.network.PacketDistributor;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -34,7 +35,7 @@ public class PortalSavedData extends SavedData
         HashMap<String, PortalInfo> map = portalInfo.computeIfAbsent(world.dimension(), k -> new HashMap<>());
         map.put(orange ? "orange" : "blue", new PortalInfo(orange, pos));
         this.setDirty();
-        PortalGunClassic.channel.sendToDimension(new PacketPortalStatus(map.containsKey("blue"), map.containsKey("orange")), world.provider.getDimension());
+        PortalGunClassic.channel.send(PacketDistributor.DIMENSION.with(world::dimension), new PacketPortalStatus(map.containsKey("blue"), map.containsKey("orange")));
     }
 
     public void kill(Level world, boolean orange)
@@ -53,7 +54,8 @@ public class PortalSavedData extends SavedData
                 }
                 this.setDirty();
             }
-            PortalGunClassic.channel.sendToDimension(new PacketPortalStatus(map.containsKey("blue"), map.containsKey("orange")), world.provider.getDimension());
+            PortalGunClassic.channel.send(PacketDistributor.DIMENSION.with(world::dimension), new PacketPortalStatus(map.containsKey("blue"), map.containsKey("orange")));
+
         }
     }
 

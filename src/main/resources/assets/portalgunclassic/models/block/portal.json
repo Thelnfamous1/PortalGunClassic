@@ -2,5 +2,6 @@
   "parent": "builtin/generated",
   "textures": {
     "all": "portalgunclassic:blocks/dummytexture"
-  }
+  },
+  "render_type": "cutout"
 }

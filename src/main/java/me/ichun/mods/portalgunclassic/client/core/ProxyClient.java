@@ -1,6 +1,5 @@
 package me.ichun.mods.portalgunclassic.client.core;
 
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.client.render.RenderPortalProjectile;
 import me.ichun.mods.portalgunclassic.client.render.TileRendererPortal;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
@@ -24,8 +23,8 @@ public class ProxyClient extends ProxyCommon
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener((RegisterKeyMappingsEvent event) -> event.register(PortalGunClassic.eventHandlerClient.keySwitch));
         modEventBus.addListener((EntityRenderersEvent.RegisterRenderers event) -> {
-            event.registerBlockEntityRenderer(PGCRegistries.TILE_PORTAL.get(), TileRendererPortal::new);
-            event.registerEntityRenderer(PGCRegistries.PORTAL_PROJECTILE.get(), RenderPortalProjectile::new);
+            event.registerBlockEntityRenderer(PortalGunClassic.TILE_PORTAL.get(), TileRendererPortal::new);
+            event.registerEntityRenderer(PortalGunClassic.PORTAL_PROJECTILE.get(), RenderPortalProjectile::new);
         });
     }
 }

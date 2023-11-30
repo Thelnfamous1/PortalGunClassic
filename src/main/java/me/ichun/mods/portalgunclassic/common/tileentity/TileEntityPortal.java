@@ -1,6 +1,5 @@
 package me.ichun.mods.portalgunclassic.common.tileentity;
 
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.packet.PacketEntityLocation;
 import me.ichun.mods.portalgunclassic.common.packet.PacketRequestTeleport;
@@ -10,17 +9,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -35,16 +34,15 @@ public class TileEntityPortal extends BlockEntity
 
     public TileEntityPortal(BlockPos blockPos, BlockState blockState)
     {
-        super(PGCRegistries.TILE_PORTAL.get(), blockPos, blockState);
+        super(PortalGunClassic.TILE_PORTAL.get(), blockPos, blockState);
         top = false;
         orange = false;
         face = Direction.DOWN;
     }
 
-    @Override
-    public void update()
+    public static void update(Level level, BlockPos worldPosition, BlockState pState, TileEntityPortal pBlockEntity)
     {
-        if(top)
+        if(pBlockEntity.top)
         {
             return; //The top never does anything and is there just to look pretty.
         }
@@ -56,7 +54,7 @@ public class TileEntityPortal extends BlockEntity
             {
                 return;
             }
-            PortalInfo info = PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) level).portalInfo.get(level.dimension()).get(orange ? "blue" : "orange");
+            PortalInfo info = PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) level).portalInfo.get(level.dimension()).get(pBlockEntity.orange ? "blue" : "orange");
             if(info == null)
             {
                 return;
@@ -65,14 +63,14 @@ public class TileEntityPortal extends BlockEntity
         }
         else
         {
-            if(orange && !PortalGunClassic.eventHandlerClient.status.blue || !orange && !PortalGunClassic.eventHandlerClient.status.orange)
+            if(pBlockEntity.orange && !PortalGunClassic.eventHandlerClient.status.blue || !pBlockEntity.orange && !PortalGunClassic.eventHandlerClient.status.orange)
             {
                 return;
             }
         }
         //Only hits here if we have a pair
-        AABB aabbScan =   new AABB(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), worldPosition.getX() + 1, worldPosition.getY() + (face.getAxis() != Direction.Axis.Y ? 2 : 1), worldPosition.getZ() + 1).expandTowards(face.getStepX() * 4, face.getStepY() * 4, face.getStepZ() * 4);
-        AABB aabbInside = new AABB(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), worldPosition.getX() + 1, worldPosition.getY() + (face.getAxis() != Direction.Axis.Y ? 2 : 1), worldPosition.getZ() + 1).expandTowards(face.getStepX() * 9, face.getStepY() * 9, face.getStepZ() * 9).move(-face.getStepX() * 9.999D, -face.getStepY() * 9.999D, -face.getStepZ() * 9.999D);
+        AABB aabbScan =   new AABB(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), worldPosition.getX() + 1, worldPosition.getY() + (pBlockEntity.face.getAxis() != Direction.Axis.Y ? 2 : 1), worldPosition.getZ() + 1).expandTowards(pBlockEntity.face.getStepX() * 4, pBlockEntity.face.getStepY() * 4, pBlockEntity.face.getStepZ() * 4);
+        AABB aabbInside = new AABB(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), worldPosition.getX() + 1, worldPosition.getY() + (pBlockEntity.face.getAxis() != Direction.Axis.Y ? 2 : 1), worldPosition.getZ() + 1).expandTowards(pBlockEntity.face.getStepX() * 9, pBlockEntity.face.getStepY() * 9, pBlockEntity.face.getStepZ() * 9).move(-pBlockEntity.face.getStepX() * 9.999D, -pBlockEntity.face.getStepY() * 9.999D, -pBlockEntity.face.getStepZ() * 9.999D);
         List<? extends Entity> ents = level.isClientSide ? level.getEntitiesOfClass(Player.class, aabbScan) : level.getEntitiesOfClass(Entity.class, aabbScan);
         for(Entity ent : ents)
         {
@@ -86,14 +84,14 @@ public class TileEntityPortal extends BlockEntity
             {
                 if(level.isClientSide)
                 {
-                    handleClientTeleport((Player)ent);
+                    pBlockEntity.handleClientTeleport((Player)ent);
                 }
                 else
                 {
                     BlockEntity te = level.getBlockEntity(pairLocation);
                     if(te instanceof TileEntityPortal)
                     {
-                        teleport(ent, (TileEntityPortal)te);
+                        pBlockEntity.teleport(ent, (TileEntityPortal)te);
                     }
                 }
             }
@@ -139,26 +137,38 @@ public class TileEntityPortal extends BlockEntity
             {
                 if(pair.face == Direction.NORTH)
                 {
+                    /*
                     ent.motionZ = -mX * - face.getStepX();
                     ent.motionX = mZ * - face.getStepX();
+                     */
+                    ent.setDeltaMovement(-mX * - face.getStepX(), motion.y, mZ * - face.getStepX());
                 }
                 else if(pair.face == Direction.SOUTH)
                 {
+                    /*
                     ent.motionZ = mX * - face.getStepX();
                     ent.motionX = -mZ * - face.getStepX();
+                     */
+                    ent.setDeltaMovement(mX * - face.getStepX(), motion.y, -mZ * - face.getStepX());
                 }
             }
             else if(face.getAxis() == Direction.Axis.Z)
             {
                 if(pair.face == Direction.EAST)
                 {
+                    /*
                     ent.motionZ = -mX * - face.getStepZ();
                     ent.motionX = mZ * - face.getStepZ();
+                     */
+                    ent.setDeltaMovement(-mX * - face.getStepZ(), motion.y, mZ * - face.getStepZ());
                 }
                 else if(pair.face == Direction.WEST)
                 {
+                    /*
                     ent.motionZ = mX * - face.getStepZ();
                     ent.motionX = -mZ * - face.getStepZ();
+                     */
+                    ent.setDeltaMovement(mX * - face.getStepZ(), motion.y, -mZ * - face.getStepZ());
                 }
             }
         }
@@ -194,29 +204,32 @@ public class TileEntityPortal extends BlockEntity
         ent.push(pair.face.getStepX() * 0.2D, pair.face.getStepY() * 0.2D, pair.face.getStepZ() * 0.2D);
         ent.moveTo(newX, newY, newZ, ent.getYRot(), ent.getXRot());
 
-        level.playSound(null, this.getBlockPos().getX() + 0.5D, this.getBlockPos().getY() + (face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), this.getBlockPos().getZ() + 0.5D, PGCRegistries.ENTER.get(), SoundSource.BLOCKS, 0.1F, 1.0F);
-        level.playSound(null, pair.getBlockPos().getX() + 0.5D, pair.getBlockPos().getY() + (pair.face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), pair.getBlockPos().getZ() + 0.5D, PGCRegistries.EXIT.get(), SoundSource.BLOCKS, 0.1F, 1.0F);
+        level.playSound(null, this.getBlockPos().getX() + 0.5D, this.getBlockPos().getY() + (face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), this.getBlockPos().getZ() + 0.5D, SoundRegistry.ENTER.get(), SoundSource.BLOCKS, 0.1F, 1.0F);
+        level.playSound(null, pair.getBlockPos().getX() + 0.5D, pair.getBlockPos().getY() + (pair.face.getAxis() != Direction.Axis.Y ? 1D : 0.5D), pair.getBlockPos().getZ() + 0.5D, SoundRegistry.EXIT.get(), SoundSource.BLOCKS, 0.1F, 1.0F);
 
-        PortalGunClassic.channel.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(worldPosition)), new PacketEntityLocation(ent), new NetworkRegistry.TargetPoint(ent.getLevel().dimension(), worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D, worldPosition.getZ() + 0.5D, 256));
+        PortalGunClassic.channel.send(PacketDistributor.NEAR.with(PacketDistributor.TargetPoint.p(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D, worldPosition.getZ() + 0.5D, 256, ent.getLevel().dimension())), new PacketEntityLocation(ent));
     }
 
     @Override
     @Nullable
-    public SPacketUpdateTileEntity getUpdatePacket()
+    public ClientboundBlockEntityDataPacket getUpdatePacket()
     {
-        return new SPacketUpdateTileEntity(this.worldPosition, 0, this.getUpdateTag());
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
     public CompoundTag getUpdateTag()
     {
-        return this.writeToNBT(new CompoundTag());
+        return this.saveWithoutMetadata();
     }
 
     @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt)
     {
-        this.readFromNBT(pkt.getNbtCompound());
+        CompoundTag tag = pkt.getTag();
+        if (tag != null) {
+            this.load(tag);
+        }
     }
 
     public void setup(boolean top, boolean orange, Direction face)

@@ -2,7 +2,6 @@ package me.ichun.mods.portalgunclassic.client.core;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.client.portal.PortalStatus;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.packet.PacketSwapType;
@@ -50,9 +49,9 @@ public class EventHandlerClient
     @SubscribeEvent
     public void onModelRegistry(ModelEvent.RegisterAdditional event)
     {
-        ModelLoader.setCustomModelResourceLocation(PGCRegistries.PORTAL_GUN.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_blue", "inventory"));
-        ModelLoader.setCustomModelResourceLocation(PGCRegistries.PORTAL_GUN.get(), 1, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_orange", "inventory"));
-        ModelLoader.setCustomModelResourceLocation(PGCRegistries.PORTAL_CORE.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_core", "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PortalGunClassic.PORTAL_GUN.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_blue", "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PortalGunClassic.PORTAL_GUN.get(), 1, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_orange", "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PortalGunClassic.PORTAL_CORE.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_core", "inventory"));
     }
 
     @SubscribeEvent
@@ -61,7 +60,7 @@ public class EventHandlerClient
         if(event.phase == TickEvent.Phase.END)
         {
             Minecraft mc = Minecraft.getInstance();
-            if(mc.player != null && (mc.player.getMainHandItem().getItem() == PGCRegistries.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PGCRegistries.PORTAL_GUN.get()))
+            if(mc.player != null && (mc.player.getMainHandItem().getItem() == PortalGunClassic.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PortalGunClassic.PORTAL_GUN.get()))
             {
                 if(!keySwitchDown && keySwitch.isDown())
                 {
@@ -105,7 +104,7 @@ public class EventHandlerClient
         if(event.phase == TickEvent.Phase.END)
         {
             Minecraft mc = Minecraft.getInstance();
-            if(mc.screen == null && !mc.options.hideGui && mc.player != null && (mc.player.getMainHandItem().getItem() == PGCRegistries.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PGCRegistries.PORTAL_GUN.get()))
+            if(mc.screen == null && !mc.options.hideGui && mc.player != null && (mc.player.getMainHandItem().getItem() == PortalGunClassic.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PortalGunClassic.PORTAL_GUN.get()))
             {
                 //is holding a portal gun
 

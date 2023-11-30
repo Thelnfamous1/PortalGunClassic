@@ -1,6 +1,5 @@
 package me.ichun.mods.portalgunclassic.common.item;
 
-import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
 import net.minecraft.sounds.SoundSource;
@@ -31,7 +30,7 @@ public class ItemPortalGun extends Item
         if(!pLevel.isClientSide)
         {
             ItemStack is = pPlayer.getItemInHand(pUsedHand);
-            pLevel.playSound(null, pPlayer.getX(), pPlayer.getEyeY(), pPlayer.getZ(), is.getDamageValue() == 0 ? PGCRegistries.FIRE_BLUE.get() : PGCRegistries.FIRE_RED.get(), SoundSource.PLAYERS, 0.3F, 1.0F);
+            pLevel.playSound(null, pPlayer.getX(), pPlayer.getEyeY(), pPlayer.getZ(), is.getDamageValue() == 0 ? SoundRegistry.FIRE_BLUE.get() : SoundRegistry.FIRE_RED.get(), SoundSource.PLAYERS, 0.3F, 1.0F);
             pLevel.addFreshEntity(new EntityPortalProjectile(pLevel, pPlayer, is.getDamageValue() == 1));
         }
         return InteractionResultHolder.sidedSuccess(pPlayer.getItemInHand(pUsedHand), pLevel.isClientSide);
