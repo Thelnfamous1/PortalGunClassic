@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.portal.PortalInfo;
 import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -26,13 +27,13 @@ public class PacketRequestTeleport implements IMessage
     @Override
     public void fromBytes(ByteBuf buf)
     {
-        pos = BlockPos.fromLong(buf.readLong());
+        pos = BlockPos.of(buf.readLong());
     }
 
     @Override
     public void toBytes(ByteBuf buf)
     {
-        buf.writeLong(pos.toLong());
+        buf.writeLong(pos.asLong());
     }
 
     public static class Handler implements IMessageHandler<PacketRequestTeleport, IMessage>

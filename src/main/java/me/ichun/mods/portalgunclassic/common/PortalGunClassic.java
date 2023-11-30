@@ -5,23 +5,21 @@ import me.ichun.mods.portalgunclassic.common.core.EventHandlerServer;
 import me.ichun.mods.portalgunclassic.common.core.ProxyCommon;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.network.simple.SimpleChannel;
 
-@Mod(modid = PortalGunClassic.MOD_ID, name = PortalGunClassic.MOD_NAME,
-        version = PortalGunClassic.VERSION,
-        dependencies = "required-after:forge@[14.23.2.2624,)",
-        acceptedMinecraftVersions = "[1.12,1.13)"
-)
+@Mod(PortalGunClassic.MOD_ID)
 public class PortalGunClassic
 {
     public static final String MOD_ID = "portalgunclassic";
     public static final String MOD_NAME = "PortalGunClassic";
     public static final String VERSION = "1.0.0";
 
-    @Mod.Instance(MOD_ID)
     public static PortalGunClassic instance;
 
     @SidedProxy(clientSide = "me.ichun.mods.portalgunclassic.client.core.ProxyClient", serverSide = "me.ichun.mods.portalgunclassic.common.core.ProxyCommon")
@@ -30,14 +28,18 @@ public class PortalGunClassic
     public static EventHandlerClient eventHandlerClient;
     public static EventHandlerServer eventHandlerServer;
 
-    public static Item itemPortalGun;
-    public static Item itemPortalCore;
+    //public static Item itemPortalGun;
+    //public static Item itemPortalCore;
 
-    public static Block blockPortalGun;
+    //public static Block blockPortalGun;
 
-    public static SimpleNetworkWrapper channel;
+    public static SimpleChannel channel;
 
-    @Mod.EventHandler
+    public PortalGunClassic(){
+        instance = this;
+    }
+
+    //@Mod.EventHandler
     public void onPreInit(FMLPreInitializationEvent event)
     {
         proxy.preInit();

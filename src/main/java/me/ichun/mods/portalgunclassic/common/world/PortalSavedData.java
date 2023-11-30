@@ -1,38 +1,45 @@
 package me.ichun.mods.portalgunclassic.common.world;
 
+import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Dynamic;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.packet.PacketPortalStatus;
 import me.ichun.mods.portalgunclassic.common.portal.PortalInfo;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.saveddata.SavedData;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class PortalSavedData extends WorldSavedData
+public class PortalSavedData extends SavedData
 {
     public static final String DATA_ID = "PortalGunClassicSaveData";
+    private static final Logger LOGGER = LogUtils.getLogger();
 
-    public HashMap<Integer, HashMap<String, PortalInfo>> portalInfo = new HashMap<>();
+    public HashMap<ResourceKey<Level>, HashMap<String, PortalInfo>> portalInfo = new HashMap<>();
 
-    public PortalSavedData(String identifier)
+    public PortalSavedData()
     {
-        super(identifier);
     }
 
-    public void set(World world, boolean orange, BlockPos pos)
+    public void set(Level world, boolean orange, BlockPos pos)
     {
-        HashMap<String, PortalInfo> map = portalInfo.computeIfAbsent(world.provider.getDimension(), k -> new HashMap<>());
+        HashMap<String, PortalInfo> map = portalInfo.computeIfAbsent(world.dimension(), k -> new HashMap<>());
         map.put(orange ? "orange" : "blue", new PortalInfo(orange, pos));
-        markDirty();
+        this.setDirty();
         PortalGunClassic.channel.sendToDimension(new PacketPortalStatus(map.containsKey("blue"), map.containsKey("orange")), world.provider.getDimension());
     }
 
-    public void kill(World world, boolean orange)
+    public void kill(Level world, boolean orange)
     {
-        HashMap<String, PortalInfo> map = portalInfo.get(world.provider.getDimension());
+        HashMap<String, PortalInfo> map = portalInfo.get(world.dimension());
         if(map != null)
         {
             PortalInfo info = map.get(orange ? "orange" : "blue");
@@ -42,57 +49,63 @@ public class PortalSavedData extends WorldSavedData
                 map.remove(orange ? "orange" : "blue");
                 if(map.isEmpty())
                 {
-                    portalInfo.remove(world.provider.getDimension());
+                    portalInfo.remove(world.dimension());
                 }
-                markDirty();
+                this.setDirty();
             }
             PortalGunClassic.channel.sendToDimension(new PacketPortalStatus(map.containsKey("blue"), map.containsKey("orange")), world.provider.getDimension());
         }
     }
 
-    @Override
-    public void readFromNBT(NBTTagCompound tag)
+    public static PortalSavedData load(CompoundTag tag)
     {
-        int count = tag.getInteger("dimCount");
-        for(int i = 0; i < count; i++)
+        PortalSavedData portalSavedData = new PortalSavedData();
+        int count = tag.getInt("dimCount");
+        for(int dimIdx = 0; dimIdx < count; dimIdx++)
         {
-            NBTTagCompound dimTag = tag.getCompoundTag("dim" + i);
+            CompoundTag dimTag = tag.getCompound("dim" + dimIdx);
             HashMap<String, PortalInfo> map = new HashMap<>();
-            if(dimTag.hasKey("blue"))
+            if(dimTag.contains("blue"))
             {
-                map.put("blue", PortalInfo.createFromNBT((NBTTagCompound)dimTag.getTag("blue")));
+                map.put("blue", PortalInfo.createFromNBT(dimTag.getCompound("blue")));
             }
-            if(dimTag.hasKey("orange"))
+            if(dimTag.contains("orange"))
             {
-                map.put("orange", PortalInfo.createFromNBT((NBTTagCompound)dimTag.getTag("orange")));
+                map.put("orange", PortalInfo.createFromNBT(dimTag.getCompound("orange")));
             }
             if(!map.isEmpty())
             {
-                portalInfo.put(dimTag.getInteger("dim"), map);
+                ResourceKey<Level> dimension = DimensionType.parseLegacy(new Dynamic<>(NbtOps.INSTANCE, dimTag.get("dimension")))
+                        .resultOrPartial(LOGGER::error)
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid map dimension: " + dimTag.get("dim")));
+                portalSavedData.portalInfo.put(dimension, map);
             }
         }
+        return portalSavedData;
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag)
+    public CompoundTag save(CompoundTag tag)
     {
-        tag.setInteger("dimCount", portalInfo.size());
-        int i = 0;
-        for(Map.Entry<Integer, HashMap<String, PortalInfo>> e : portalInfo.entrySet())
+        tag.putInt("dimCount", portalInfo.size());
+        int dimIdx = 0;
+        for(Map.Entry<ResourceKey<Level>, HashMap<String, PortalInfo>> e : portalInfo.entrySet())
         {
-            NBTTagCompound dimTag = new NBTTagCompound();
-            dimTag.setInteger("dim", e.getKey());
+            CompoundTag dimTag = new CompoundTag();
+            ResourceLocation.CODEC.encodeStart(NbtOps.INSTANCE, e.getKey().location())
+                    .resultOrPartial(LOGGER::error)
+                    .ifPresent((nbt) -> dimTag.put("dim", nbt));
             if(e.getValue().containsKey("blue"))
             {
-                dimTag.setTag("blue", e.getValue().get("blue").toNBT());
+                dimTag.put("blue", e.getValue().get("blue").toNBT());
             }
             if(e.getValue().containsKey("orange"))
             {
-                dimTag.setTag("orange", e.getValue().get("orange").toNBT());
+                dimTag.put("orange", e.getValue().get("orange").toNBT());
             }
 
-            tag.setTag("dim" + i, dimTag);
-            i++;
+            tag.put("dim" + dimIdx, dimTag);
+            dimIdx++;
         }
 
         return tag;

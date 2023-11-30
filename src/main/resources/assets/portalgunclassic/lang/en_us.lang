@@ -11,4 +11,5 @@ item.portalgunclassic.item.portalgun.name=Portal Gun
 item.portalgunclassic.item.portal_core.name=Portal Core
 
 key.portalgunclassic.switch=Switch Portal Gun Type
+key.portalgunclassic.reset=Reset Portal Gun
 key.categories.portalgun=Portal Gun

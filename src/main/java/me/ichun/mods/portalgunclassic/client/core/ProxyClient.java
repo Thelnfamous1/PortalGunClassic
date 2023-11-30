@@ -1,14 +1,15 @@
 package me.ichun.mods.portalgunclassic.client.core;
 
+import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.client.render.RenderPortalProjectile;
 import me.ichun.mods.portalgunclassic.client.render.TileRendererPortal;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.core.ProxyCommon;
-import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
-import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class ProxyClient extends ProxyCommon
 {
@@ -20,10 +21,11 @@ public class ProxyClient extends ProxyCommon
         PortalGunClassic.eventHandlerClient = new EventHandlerClient();
         MinecraftForge.EVENT_BUS.register(PortalGunClassic.eventHandlerClient);
 
-        ClientRegistry.registerKeyBinding(PortalGunClassic.eventHandlerClient.keySwitch);
-
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPortal.class, new TileRendererPortal());
-
-        RenderingRegistry.registerEntityRenderingHandler(EntityPortalProjectile.class, new RenderPortalProjectile.Factory());
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modEventBus.addListener((RegisterKeyMappingsEvent event) -> event.register(PortalGunClassic.eventHandlerClient.keySwitch));
+        modEventBus.addListener((EntityRenderersEvent.RegisterRenderers event) -> {
+            event.registerBlockEntityRenderer(PGCRegistries.TILE_PORTAL.get(), TileRendererPortal::new);
+            event.registerEntityRenderer(PGCRegistries.PORTAL_PROJECTILE.get(), RenderPortalProjectile::new);
+        });
     }
 }

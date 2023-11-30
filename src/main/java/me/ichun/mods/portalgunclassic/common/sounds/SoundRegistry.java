@@ -1,5 +1,8 @@
 package me.ichun.mods.portalgunclassic.common.sounds;
 
+import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -40,7 +43,7 @@ public class SoundRegistry
 
     private static SoundEvent register(IForgeRegistry<SoundEvent> registry, String name)
     {
-        ResourceLocation rs = new ResourceLocation("portalgunclassic", name);
+        ResourceLocation rs = new ResourceLocation(PortalGunClassic.MOD_ID, name);
         SoundEvent event = new SoundEvent(rs).setRegistryName(rs);
         registry.register(event);
         return event;

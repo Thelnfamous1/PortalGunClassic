@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -130,7 +131,7 @@ public class PacketEntityLocation implements IMessage
                 ent.rotationYaw = message.yaw;
                 ent.rotationPitch = message.pitch;
 
-                if(ent == Minecraft.getMinecraft().player)
+                if(ent == Minecraft.getInstance().player)
                 {
                     PortalGunClassic.eventHandlerClient.justTeleported = true;
                     PortalGunClassic.eventHandlerClient.mX = ent.motionX;

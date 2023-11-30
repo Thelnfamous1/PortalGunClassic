@@ -1,10 +1,12 @@
 package me.ichun.mods.portalgunclassic.common.packet;
 
 import io.netty.buffer.ByteBuf;
+import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -50,7 +52,7 @@ public class PacketSwapType implements IMessage
                 for(EnumHand hand : EnumHand.values())
                 {
                     ItemStack is = player.getHeldItem(hand);
-                    if(is.getItem() == PortalGunClassic.itemPortalGun)
+                    if(is.getItem() == PGCRegistries.PORTAL_GUN.get())
                     {
                         is.setItemDamage(is.getItemDamage() == 1 ? 0 : 1);
                     }
@@ -68,13 +70,13 @@ public class PacketSwapType implements IMessage
                     for(EnumHand hand : EnumHand.values())
                     {
                         ItemStack is = player.getHeldItem(hand);
-                        if(is.getItem() == PortalGunClassic.itemPortalGun)
+                        if(is.getItem() == PGCRegistries.PORTAL_GUN.get())
                         {
                             PortalGunClassic.eventHandlerServer.getSaveData(player.world).kill(player.world, is.getItemDamage() == 1);
                         }
                     }
                 }
-                player.getEntityWorld().playSound(null, player.posX, player.posY + player.getEyeHeight(), player.posZ, SoundRegistry.reset, SoundCategory.PLAYERS, 0.3F, 1.0F);
+                player.getEntityWorld().playSound(null, player.posX, player.posY + player.getEyeHeight(), player.posZ, PGCRegistries.RESET.get(), SoundSource.PLAYERS, 0.3F, 1.0F);
             }
             return null;
         }

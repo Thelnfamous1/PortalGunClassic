@@ -1,24 +1,29 @@
 package me.ichun.mods.portalgunclassic.client.core;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.client.portal.PortalStatus;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.packet.PacketSwapType;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.lwjgl.glfw.GLFW;
 
 public class EventHandlerClient
 {
@@ -28,8 +33,8 @@ public class EventHandlerClient
     public static final ResourceLocation txRFull = new ResourceLocation("portalgunclassic", "textures/overlay/rfull.png");
 
 
-    public KeyBinding keySwitch = new KeyBinding("key.portalgunclassic.switch", Keyboard.KEY_G, "key.categories.portalgun");
-    public KeyBinding keyReset = new KeyBinding("key.portalgunclassic.reset", Keyboard.KEY_R, "key.categories.portalgun");
+    public KeyMapping keySwitch = new KeyMapping("key.portalgunclassic.switch", GLFW.GLFW_KEY_G, "key.categories.portalgun");
+    public KeyMapping keyReset = new KeyMapping("key.portalgunclassic.reset", GLFW.GLFW_KEY_R, "key.categories.portalgun");
 
     public boolean keySwitchDown = false;
     public boolean keyResetDown = false;
@@ -43,11 +48,11 @@ public class EventHandlerClient
     public double mZ = 0D;
 
     @SubscribeEvent
-    public void onModelRegistry(ModelRegistryEvent event)
+    public void onModelRegistry(ModelEvent.RegisterAdditional event)
     {
-        ModelLoader.setCustomModelResourceLocation(PortalGunClassic.itemPortalGun, 0, new ModelResourceLocation("portalgunclassic:pg_blue", "inventory"));
-        ModelLoader.setCustomModelResourceLocation(PortalGunClassic.itemPortalGun, 1, new ModelResourceLocation("portalgunclassic:pg_orange", "inventory"));
-        ModelLoader.setCustomModelResourceLocation(PortalGunClassic.itemPortalCore, 0, new ModelResourceLocation("portalgunclassic:pg_core", "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PGCRegistries.PORTAL_GUN.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_blue", "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PGCRegistries.PORTAL_GUN.get(), 1, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_orange", "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PGCRegistries.PORTAL_CORE.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_core", "inventory"));
     }
 
     @SubscribeEvent
@@ -55,36 +60,40 @@ public class EventHandlerClient
     {
         if(event.phase == TickEvent.Phase.END)
         {
-            Minecraft mc = Minecraft.getMinecraft();
-            if(mc.player != null && (mc.player.getHeldItemMainhand().getItem() == PortalGunClassic.itemPortalGun || mc.player.getHeldItemOffhand().getItem() == PortalGunClassic.itemPortalGun))
+            Minecraft mc = Minecraft.getInstance();
+            if(mc.player != null && (mc.player.getMainHandItem().getItem() == PGCRegistries.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PGCRegistries.PORTAL_GUN.get()))
             {
-                if(!keySwitchDown && keySwitch.isKeyDown())
+                if(!keySwitchDown && keySwitch.isDown())
                 {
                     PortalGunClassic.channel.sendToServer(new PacketSwapType(false, 0));
                 }
-                if(!keyResetDown && keyReset.isKeyDown())
+                if(!keyResetDown && keyReset.isDown())
                 {
-                    PortalGunClassic.channel.sendToServer(new PacketSwapType(true, GuiScreen.isShiftKeyDown() ? 1 : 0));
+                    PortalGunClassic.channel.sendToServer(new PacketSwapType(true, Screen.hasShiftDown() ? 1 : 0));
                 }
-                keySwitchDown = keySwitch.isKeyDown();
-                keyResetDown = keyReset.isKeyDown();
+                keySwitchDown = keySwitch.isDown();
+                keyResetDown = keyReset.isDown();
             }
         }
         else
         {
-            Minecraft mc = Minecraft.getMinecraft();
-            if(teleportCooldown > 0 && !mc.isGamePaused())
+            Minecraft mc = Minecraft.getInstance();
+            if(teleportCooldown > 0 && !mc.isPaused())
             {
                 teleportCooldown--;
             }
             if(justTeleported)
             {
-                if(mc.player != null && mc.player.motionX == 0.0D && mc.player.motionY == 0.0D && mc.player.motionZ == 0.0D)
+                Vec3 deltaMove = mc.player.getDeltaMovement();
+                if(mc.player != null && deltaMove.x == 0.0D && deltaMove.y == 0.0D && deltaMove.z == 0.0D)
                 {
                     justTeleported = false;
+                    /*
                     mc.player.motionX = mX;
                     mc.player.motionY = mY;
                     mc.player.motionZ = mZ;
+                     */
+                    mc.player.setDeltaMovement(mX, mY, mZ);
                 }
             }
         }
@@ -95,13 +104,13 @@ public class EventHandlerClient
     {
         if(event.phase == TickEvent.Phase.END)
         {
-            Minecraft mc = Minecraft.getMinecraft();
-            if(mc.currentScreen == null && !mc.gameSettings.hideGUI && mc.player != null && (mc.player.getHeldItemMainhand().getItem() == PortalGunClassic.itemPortalGun || mc.player.getHeldItemOffhand().getItem() == PortalGunClassic.itemPortalGun))
+            Minecraft mc = Minecraft.getInstance();
+            if(mc.screen == null && !mc.options.hideGui && mc.player != null && (mc.player.getMainHandItem().getItem() == PGCRegistries.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PGCRegistries.PORTAL_GUN.get()))
             {
                 //is holding a portal gun
 
-                GlStateManager.enableBlend();
-                GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+                GlStateManager._enableBlend();
+                GlStateManager._blendFunc(GlStateManager.SourceFactor.SRC_ALPHA.value, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA.value);
 
                 ScaledResolution reso = new ScaledResolution(mc);
                 double size = 40;
@@ -113,7 +122,7 @@ public class EventHandlerClient
                 Tessellator tessellator = Tessellator.getInstance();
                 BufferBuilder bufferbuilder = tessellator.getBuffer();
 
-                mc.getTextureManager().bindTexture(status != null && status.blue ? txLFull : txLEmpty);
+                mc.getTextureManager().bindForSetup(status != null && status.blue ? txLFull : txLEmpty);
                 bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
                 bufferbuilder.pos(x2, y2, 0.0D).tex(1D, 1D).color(5, 130, 255, 255).endVertex();
                 bufferbuilder.pos(x2, y1, 0.0D).tex(1D, 0D).color(5, 130, 255, 255).endVertex();
@@ -133,7 +142,7 @@ public class EventHandlerClient
     }
 
     @SubscribeEvent
-    public void onConnectToServerEvent(FMLNetworkEvent.ClientConnectedToServerEvent event)
+    public void onConnectToServerEvent(ClientPlayerNetworkEvent.LoggingIn event)
     {
         status = null;
         justTeleported = false;

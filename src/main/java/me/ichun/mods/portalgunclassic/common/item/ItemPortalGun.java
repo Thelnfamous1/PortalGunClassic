@@ -1,35 +1,39 @@
 package me.ichun.mods.portalgunclassic.common.item;
 
+import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.*;
-import net.minecraft.world.World;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public class ItemPortalGun extends Item
 {
-    public ItemPortalGun()
+    public ItemPortalGun(Item.Properties properties)
     {
+        super(properties);
+        /*
         setMaxStackSize(1);
         setHasSubtypes(true);
         setMaxDamage(0);
-        setRegistryName(new ResourceLocation("portalgunclassic", "portalgun"));
+        setRegistryName(new ResourceLocation(PortalGunClassic.MOD_ID, "portalgun"));
         setUnlocalizedName("portalgunclassic.item.portalgun");
         setCreativeTab(CreativeTabs.TOOLS);
+         */
     }
 
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand handIn)
-    {
-        if(!world.isRemote)
+    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+        if(!pLevel.isClientSide)
         {
-            ItemStack is = player.getHeldItem(handIn);
-            world.playSound(null, player.posX, player.posY + player.getEyeHeight(), player.posZ, is.getItemDamage() == 0 ? SoundRegistry.fireblue : SoundRegistry.firered, SoundCategory.PLAYERS, 0.3F, 1.0F);
-            world.spawnEntity(new EntityPortalProjectile(world, player, is.getItemDamage() == 1));
+            ItemStack is = pPlayer.getItemInHand(pUsedHand);
+            pLevel.playSound(null, pPlayer.getX(), pPlayer.getEyeY(), pPlayer.getZ(), is.getDamageValue() == 0 ? PGCRegistries.FIRE_BLUE.get() : PGCRegistries.FIRE_RED.get(), SoundSource.PLAYERS, 0.3F, 1.0F);
+            pLevel.addFreshEntity(new EntityPortalProjectile(pLevel, pPlayer, is.getDamageValue() == 1));
         }
-        return new ActionResult(EnumActionResult.SUCCESS, player.getHeldItem(handIn));
+        return InteractionResultHolder.sidedSuccess(pPlayer.getItemInHand(pUsedHand), pLevel.isClientSide);
     }
 }

@@ -1,64 +1,69 @@
 package me.ichun.mods.portalgunclassic.common.entity;
 
+import me.Thelnfamous1.portalgunclassic.PGCRegistries;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.block.BlockPortal;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
 import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraftforge.network.NetworkHooks;
 
 public class EntityPortalProjectile extends Entity
 {
-    private static final DataParameter<Boolean> ORANGE = EntityDataManager.createKey(EntityPortalProjectile.class, DataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> ORANGE = SynchedEntityData.defineId(EntityPortalProjectile.class, EntityDataSerializers.BOOLEAN);
     public int age = 0;
 
-    public EntityPortalProjectile(World worldIn)
+    public EntityPortalProjectile(EntityType<? extends EntityPortalProjectile> type, Level worldIn)
     {
-        super(worldIn);
-        setSize(0.3F, 0.3F);
-        setEntityInvulnerable(true);
+        super(type, worldIn);
+        //setSize(0.3F, 0.3F);
+        setInvulnerable(true);
     }
 
-    public EntityPortalProjectile(World world, Entity entity, boolean isOrange)
+    public EntityPortalProjectile(Level world, Entity entity, boolean isOrange)
     {
-        this(world);
-        this.dataManager.set(ORANGE, isOrange);
+        this(PGCRegistries.PORTAL_PROJECTILE.get(), world);
+        this.setOrange(isOrange);
         shoot(entity, 4.999F);
-        setLocationAndAngles(entity.posX, entity.posY + entity.getEyeHeight() - (width / 2F), entity.posZ, entity.rotationYaw, entity.rotationPitch);
+        moveTo(entity.getX(), entity.getEyeY() - (this.getBbWidth() / 2F), entity.getZ(), entity.getYRot(), entity.getXRot());
     }
 
     public void setOrange(boolean flag)
     {
-        dataManager.set(ORANGE, flag);
+        entityData.set(ORANGE, flag);
     }
 
     public boolean isOrange()
     {
-        return dataManager.get(ORANGE);
+        return entityData.get(ORANGE);
     }
 
     public void shoot(Entity entity, float velocity)
     {
-        float f = -MathHelper.sin(entity.rotationYaw * 0.017453292F) * MathHelper.cos(entity.rotationPitch * 0.017453292F);
-        float f1 = -MathHelper.sin((entity.rotationPitch) * 0.017453292F);
-        float f2 = MathHelper.cos(entity.rotationYaw * 0.017453292F) * MathHelper.cos(entity.rotationPitch * 0.017453292F);
-        this.shoot((double)f, (double)f1, (double)f2, velocity);
+        float f = -Mth.sin(entity.getYRot() * 0.017453292F) * Mth.cos(entity.getXRot() * 0.017453292F);
+        float f1 = -Mth.sin((entity.getXRot()) * 0.017453292F);
+        float f2 = Mth.cos(entity.getYRot() * 0.017453292F) * Mth.cos(entity.getXRot() * 0.017453292F);
+        this.shoot(f, f1, f2, velocity);
+        /*
         this.motionX += entity.motionX;
         this.motionZ += entity.motionZ;
 
@@ -66,6 +71,9 @@ public class EntityPortalProjectile extends Entity
         {
             this.motionY += entity.motionY;
         }
+         */
+        Vec3 entityMotion = entity.getDeltaMovement();
+        this.push(entityMotion.x, !entity.isOnGround() ? entityMotion.y : 0, entityMotion.z);
     }
 
     /**
@@ -73,59 +81,63 @@ public class EntityPortalProjectile extends Entity
      */
     public void shoot(double x, double y, double z, float velocity)
     {
-        float f = MathHelper.sqrt(x * x + y * y + z * z);
+        float f = Mth.sqrt((float) (x * x + y * y + z * z));
         x = x / (double)f;
         y = y / (double)f;
         z = z / (double)f;
         x = x * (double)velocity;
         y = y * (double)velocity;
         z = z * (double)velocity;
+        /*
         this.motionX = x;
         this.motionY = y;
         this.motionZ = z;
-        float f1 = MathHelper.sqrt(x * x + z * z);
-        this.rotationYaw = (float)(MathHelper.atan2(x, z) * (180D / Math.PI));
-        this.rotationPitch = (float)(MathHelper.atan2(y, (double)f1) * (180D / Math.PI));
-        this.prevRotationYaw = this.rotationYaw;
-        this.prevRotationPitch = this.rotationPitch;
+         */
+        this.setDeltaMovement(x, y, z);
+        float f1 = Mth.sqrt((float) (x * x + z * z));
+        this.setYRot((float)(Mth.atan2(x, z) * (180D / Math.PI)));
+        this.setXRot((float)(Mth.atan2(y, f1) * (180D / Math.PI)));
+        this.yRotO = this.getYRot();
+        this.xRotO = this.getXRot();
     }
 
     @Override
-    public void entityInit()
+    public void defineSynchedData()
     {
-        this.dataManager.register(ORANGE, false);
+        this.entityData.define(ORANGE, false);
     }
 
     @Override
-    public void onUpdate()
+    public void tick()
     {
-        if(posY > world.getHeight() * 2 || posY < -world.getHeight() * 2 || age > 1200) //a minute
+        if(getY() > level.getHeight() * 2 || getY() < -level.getHeight() * 2 || age > 1200) //a minute
         {
-            setDead();
+            discard();
             return;
         }
 
         age++;
 
-        this.lastTickPosX = this.posX;
-        this.lastTickPosY = this.posY;
-        this.lastTickPosZ = this.posZ;
+        this.xo = this.getX();
+        this.yo = this.getY();
+        this.zo = this.getZ();
 
-        super.onUpdate();
+        super.tick();
 
-        Vec3d vec31 = new Vec3d(this.posX, this.posY, this.posZ);
-        Vec3d vec32 = new Vec3d(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
+        Vec3 motion = this.getDeltaMovement();
+        Vec3 vec31 = new Vec3(this.getX(), this.getY(), this.getZ());
+        Vec3 vec32 = new Vec3(this.getX() + motion.x, this.getY() + motion.y, this.getZ() + motion.z);
         if (!Double.isNaN(vec31.x) && !Double.isNaN(vec31.y) && !Double.isNaN(vec31.z))
         {
             if (!Double.isNaN(vec32.x) && !Double.isNaN(vec32.y) && !Double.isNaN(vec32.z))
             {
-                int i = MathHelper.floor(vec32.x);
-                int j = MathHelper.floor(vec32.y);
-                int k = MathHelper.floor(vec32.z);
-                int l = MathHelper.floor(vec31.x);
-                int i1 = MathHelper.floor(vec31.y);
-                int j1 = MathHelper.floor(vec31.z);
-                BlockPos blockpos;
+                int i = Mth.floor(vec32.x);
+                int j = Mth.floor(vec32.y);
+                int k = Mth.floor(vec32.z);
+                int l = Mth.floor(vec31.x);
+                int i1 = Mth.floor(vec31.y);
+                int j1 = Mth.floor(vec31.z);
+                BlockPos.MutableBlockPos blockpos = new BlockPos.MutableBlockPos();
 
                 int k1 = 200;
 
@@ -219,46 +231,47 @@ public class EntityPortalProjectile extends Entity
                         d5 = -1.0E-4D;
                     }
 
-                    EnumFacing enumfacing;
+                    Direction enumfacing;
 
                     if (d3 < d4 && d3 < d5)
                     {
-                        enumfacing = i > l ? EnumFacing.WEST : EnumFacing.EAST;
-                        vec31 = new Vec3d(d0, vec31.y + d7 * d3, vec31.z + d8 * d3);
+                        enumfacing = i > l ? Direction.WEST : Direction.EAST;
+                        vec31 = new Vec3(d0, vec31.y + d7 * d3, vec31.z + d8 * d3);
                     }
                     else if (d4 < d5)
                     {
-                        enumfacing = j > i1 ? EnumFacing.DOWN : EnumFacing.UP;
-                        vec31 = new Vec3d(vec31.x + d6 * d4, d1, vec31.z + d8 * d4);
+                        enumfacing = j > i1 ? Direction.DOWN : Direction.UP;
+                        vec31 = new Vec3(vec31.x + d6 * d4, d1, vec31.z + d8 * d4);
                     }
                     else
                     {
-                        enumfacing = k > j1 ? EnumFacing.NORTH : EnumFacing.SOUTH;
-                        vec31 = new Vec3d(vec31.x + d6 * d5, vec31.y + d7 * d5, d2);
+                        enumfacing = k > j1 ? Direction.NORTH : Direction.SOUTH;
+                        vec31 = new Vec3(vec31.x + d6 * d5, vec31.y + d7 * d5, d2);
                     }
 
-                    l = MathHelper.floor(vec31.x) - (enumfacing == EnumFacing.EAST ? 1 : 0);
-                    i1 = MathHelper.floor(vec31.y) - (enumfacing == EnumFacing.UP ? 1 : 0);
-                    j1 = MathHelper.floor(vec31.z) - (enumfacing == EnumFacing.SOUTH ? 1 : 0);
-                    blockpos = new BlockPos(l, i1, j1);
-                    IBlockState iblockstate1 = world.getBlockState(blockpos);
+                    l = Mth.floor(vec31.x) - (enumfacing == Direction.EAST ? 1 : 0);
+                    i1 = Mth.floor(vec31.y) - (enumfacing == Direction.UP ? 1 : 0);
+                    j1 = Mth.floor(vec31.z) - (enumfacing == Direction.SOUTH ? 1 : 0);
+                    blockpos.set(l, i1, j1);
+                    BlockState iblockstate1 = level.getBlockState(blockpos);
                     Block block1 = iblockstate1.getBlock();
 
-                    if (iblockstate1.getCollisionBoundingBox(world, blockpos) != Block.NULL_AABB)
+                    if (iblockstate1.getCollisionShape(level, blockpos) != Shapes.empty())
                     {
-                        if (block1.canCollideCheck(iblockstate1, true))
+                        //if (block1.canCollideCheck(iblockstate1, true))
                         {
-                            RayTraceResult raytraceresult1 = iblockstate1.collisionRayTrace(world, blockpos, vec31, vec32);
-                            if (raytraceresult1 != null)
+                            //HitResult clip = iblockstate1.collisionRayTrace(world, blockpos, vec31, vec32);
+                            BlockHitResult clip = level.clipWithInteractionOverride(vec31, vec32, blockpos, iblockstate1.getCollisionShape(level, blockpos), iblockstate1);
+                            if (clip != null)
                             {
                                 if(block1 == Blocks.IRON_BARS)
                                 {
-                                    vec31 = new Vec3d(raytraceresult1.hitVec.x + (motionX / 5000D), raytraceresult1.hitVec.y + (motionY / 5000D), raytraceresult1.hitVec.z + (motionZ / 5000D));
+                                    vec31 = new Vec3(clip.getLocation().x + (motion.x / 5000D), clip.getLocation().y + (motion.y / 5000D), clip.getLocation().z + (motion.z / 5000D));
                                 }
                                 else
                                 {
-                                    createPortal(raytraceresult1);
-                                    setDead();
+                                    createPortal(clip);
+                                    discard();
                                     return;
                                 }
                             }
@@ -268,105 +281,114 @@ public class EntityPortalProjectile extends Entity
             }
         }
 
-        this.posX += this.motionX;
-        this.posY += this.motionY;
-        this.posZ += this.motionZ;
-        float f = MathHelper.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
-        this.rotationYaw = (float)(MathHelper.atan2(this.motionX, this.motionZ) * (180D / Math.PI));
+        /*
+        this.posX += motion.x;
+        this.posY += motion.y;
+        this.posZ += motion.z;
+         */
+        Vec3 newPos = this.position().add(motion);
+        float f = Mth.sqrt((float) (motion.x * motion.x + motion.z * motion.z));
+        this.setYRot((float) ((float)Mth.atan2(motion.x, motion.z) * (180D / Math.PI)));
 
-        for (this.rotationPitch = (float)(MathHelper.atan2(this.motionY, (double)f) * (180D / Math.PI)); this.rotationPitch - this.prevRotationPitch < -180.0F; this.prevRotationPitch -= 360.0F)
+        for (this.setXRot((float)(Mth.atan2(motion.y, f) * (180D / Math.PI))); this.getXRot() - this.xRotO < -180.0F; this.yRotO -= 360.0F)
         {
-            ;
         }
 
-        while (this.rotationPitch - this.prevRotationPitch >= 180.0F)
+        while (this.getXRot() - this.xRotO >= 180.0F)
         {
-            this.prevRotationPitch += 360.0F;
+            this.xRotO += 360.0F;
         }
 
-        while (this.rotationYaw - this.prevRotationYaw < -180.0F)
+        while (this.getYRot() - this.yRotO < -180.0F)
         {
-            this.prevRotationYaw -= 360.0F;
+            this.yRotO -= 360.0F;
         }
 
-        while (this.rotationYaw - this.prevRotationYaw >= 180.0F)
+        while (this.getYRot() - this.yRotO >= 180.0F)
         {
-            this.prevRotationYaw += 360.0F;
+            this.yRotO += 360.0F;
         }
 
-        this.rotationPitch = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * 0.2F;
-        this.rotationYaw = this.prevRotationYaw + (this.rotationYaw - this.prevRotationYaw) * 0.2F;
+        this.setXRot(this.xRotO + (this.getXRot() - this.xRotO) * 0.2F);
+        this.setYRot(this.yRotO + (this.getYRot() - this.yRotO) * 0.2F);
 
-        this.setPosition(this.posX, this.posY, this.posZ);
+        //this.setPosition(this.posX, this.posY, this.posZ);
+        this.setPos(newPos);
     }
 
-    public void createPortal(RayTraceResult rayTraceResult)
+    public void createPortal(BlockHitResult rayTraceResult)
     {
-        if(!world.isRemote)
+        if(!level.isClientSide)
         {
-            BlockPos pos = rayTraceResult.getBlockPos().offset(rayTraceResult.sideHit);
-            if(BlockPortal.canPlace(world, pos, rayTraceResult.sideHit, isOrange()))
+            BlockPos pos = rayTraceResult.getBlockPos().offset(rayTraceResult.getDirection().getNormal());
+            if(BlockPortal.canPlace(level, pos, rayTraceResult.getDirection(), isOrange()))
             {
-                PortalGunClassic.eventHandlerServer.getSaveData(world).kill(world, isOrange());
+                PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel)level).kill(level, isOrange());
 
-                world.setBlockState(pos, PortalGunClassic.blockPortalGun.getDefaultState());
-                TileEntity te = world.getTileEntity(pos);
+                level.setBlockAndUpdate(pos, PGCRegistries.BLOCK_PORTAL.get().defaultBlockState());
+                BlockEntity te = level.getBlockEntity(pos);
                 if(te instanceof TileEntityPortal)
                 {
-                    ((TileEntityPortal)te).setup(rayTraceResult.sideHit.getAxis() != EnumFacing.Axis.Y, isOrange(), rayTraceResult.sideHit);
+                    ((TileEntityPortal)te).setup(rayTraceResult.getDirection().getAxis() != Direction.Axis.Y, isOrange(), rayTraceResult.getDirection());
                 }
-                if(rayTraceResult.sideHit.getAxis() != EnumFacing.Axis.Y)
+                if(rayTraceResult.getDirection().getAxis() != Direction.Axis.Y)
                 {
-                    world.setBlockState(pos.down(), PortalGunClassic.blockPortalGun.getDefaultState());
-                    te = world.getTileEntity(pos.down());
+                    level.setBlockAndUpdate(pos.below(), PGCRegistries.BLOCK_PORTAL.get().defaultBlockState());
+                    te = level.getBlockEntity(pos.below());
                     if(te instanceof TileEntityPortal)
                     {
-                        ((TileEntityPortal)te).setup(false, isOrange(), rayTraceResult.sideHit);
+                        ((TileEntityPortal)te).setup(false, isOrange(), rayTraceResult.getDirection());
                     }
                 }
-                PortalGunClassic.eventHandlerServer.getSaveData(world).set(world, isOrange(), rayTraceResult.sideHit.getAxis() != EnumFacing.Axis.Y ? pos.down() : pos);
+                PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) level).set(level, isOrange(), rayTraceResult.getDirection().getAxis() != Direction.Axis.Y ? pos.below() : pos);
 
-                world.playSound(null, this.posX, this.posY + (this.height / 2F), this.posZ, isOrange() ? SoundRegistry.openred : SoundRegistry.openblue, SoundCategory.BLOCKS, 0.3F, 1.0F);
+                level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), isOrange() ? PGCRegistries.OPEN_RED.get() : PGCRegistries.OPEN_BLUE.get(), SoundSource.BLOCKS, 0.3F, 1.0F);
             }
             else
             {
-                world.playSound(null, this.posX, this.posY + (this.height / 2F), this.posZ, SoundRegistry.invalid, SoundCategory.NEUTRAL, 0.5F, 1.0F);
+                level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), PGCRegistries.INVALID.get(), SoundSource.NEUTRAL, 0.5F, 1.0F);
             }
         }
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
+    public Packet<?> getAddEntityPacket() {
+        return NetworkHooks.getEntitySpawningPacket(this);
+    }
+
+    /*
+    @Override
     public int getBrightnessForRender()
     {
         return 15728880;
     }
+     */
 
+    
     @Override
-    @SideOnly(Side.CLIENT)
-    public boolean isInRangeToRenderDist(double distance)
+    public boolean shouldRenderAtSqrDistance(double distance)
     {
-        double d0 = this.getEntityBoundingBox().getAverageEdgeLength() * 10D;
+        double d0 = this.getBoundingBox().getSize() * 10D;
 
         if (Double.isNaN(d0))
         {
             d0 = 1.0D;
         }
 
-        d0 = d0 * 64.0D * getRenderDistanceWeight();
+        d0 = d0 * 64.0D * getViewScale();
         return distance < d0 * d0;
     }
 
 
     @Override
-    public void readEntityFromNBT(NBTTagCompound tag)
+    public void readAdditionalSaveData(CompoundTag tag)
     {
         setOrange(tag.getBoolean("orange"));
     }
 
     @Override
-    public void writeEntityToNBT(NBTTagCompound tag)
+    public void addAdditionalSaveData(CompoundTag tag)
     {
-        tag.setBoolean("orange", isOrange());
+        tag.putBoolean("orange", isOrange());
     }
 }

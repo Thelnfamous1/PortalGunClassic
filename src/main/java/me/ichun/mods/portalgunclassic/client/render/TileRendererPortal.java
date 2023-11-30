@@ -1,26 +1,42 @@
 package me.ichun.mods.portalgunclassic.client.render;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.PoseStack;
+import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-public class TileRendererPortal extends TileEntitySpecialRenderer<TileEntityPortal>
+public class TileRendererPortal implements BlockEntityRenderer<TileEntityPortal>
 {
-    public static final ResourceLocation txBlueBtm = new ResourceLocation("portalgunclassic", "textures/blocks/blue_bottom.png");
-    public static final ResourceLocation txBlueTop = new ResourceLocation("portalgunclassic", "textures/blocks/blue_top.png");
-    public static final ResourceLocation txBlueY = new ResourceLocation("portalgunclassic", "textures/blocks/blue_floor.png");
-    public static final ResourceLocation txOrangeBtm = new ResourceLocation("portalgunclassic", "textures/blocks/orange_bottom.png");
-    public static final ResourceLocation txOrangeTop = new ResourceLocation("portalgunclassic", "textures/blocks/orange_top.png");
-    public static final ResourceLocation txOrangeY = new ResourceLocation("portalgunclassic", "textures/blocks/orange_floor.png");
+    public static final ResourceLocation txBlueBtm = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/blocks/blue_bottom.png");
+    public static final ResourceLocation txBlueTop = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/blocks/blue_top.png");
+    public static final ResourceLocation txBlueY = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/blocks/blue_floor.png");
+    public static final ResourceLocation txOrangeBtm = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/blocks/orange_bottom.png");
+    public static final ResourceLocation txOrangeTop = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/blocks/orange_top.png");
+    public static final ResourceLocation txOrangeY = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/blocks/orange_floor.png");
+
+    public TileRendererPortal(BlockEntityRendererProvider.Context pContext) {
+
+    }
 
     public void render(TileEntityPortal te, double x, double y, double z, float partialTicks, int destroyStage, float alpha)
     {
+        
+    }
+
+    @Override
+    public void render(TileEntityPortal te, float pPartialTick, PoseStack pPoseStack, MultiBufferSource pBufferSource, int pPackedLight, int pPackedOverlay) {
         if(te.setup)
         {
             GlStateManager.pushMatrix();

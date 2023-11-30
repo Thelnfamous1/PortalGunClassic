@@ -1,25 +1,42 @@
 package me.ichun.mods.portalgunclassic.client.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 
 import javax.annotation.Nullable;
 
-public class RenderPortalProjectile extends Render<EntityPortalProjectile>
+public class RenderPortalProjectile extends EntityRenderer<EntityPortalProjectile>
 {
-    public static final ResourceLocation txBlue = new ResourceLocation("portalgunclassic", "textures/entity/portalball_blue.png");
-    public static final ResourceLocation txOrange = new ResourceLocation("portalgunclassic", "textures/entity/portalball_orange.png");
+    public static final ResourceLocation txBlue = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/entity/portalball_blue.png");
+    public static final ResourceLocation txOrange = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/entity/portalball_orange.png");
 
-    protected RenderPortalProjectile(RenderManager renderManager)
+    public RenderPortalProjectile(EntityRendererProvider.Context renderManager)
     {
         super(renderManager);
+    }
+
+    @Override
+    public void render(EntityPortalProjectile pEntity, float pEntityYaw, float pPartialTick, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
+        super.render(pEntity, pEntityYaw, pPartialTick, pPoseStack, pBuffer, pPackedLight);
+    }
+
+    @Override
+    protected int getBlockLightLevel(EntityPortalProjectile pEntity, BlockPos pPos) {
+        return 15;
     }
 
     @Override
@@ -69,19 +86,8 @@ public class RenderPortalProjectile extends Render<EntityPortalProjectile>
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
     }
 
-    @Nullable
     @Override
-    protected ResourceLocation getEntityTexture(EntityPortalProjectile entity)
-    {
-        return entity.isOrange() ? txOrange : txBlue;
-    }
-
-    public static class Factory implements IRenderFactory<EntityPortalProjectile>
-    {
-        @Override
-        public Render<EntityPortalProjectile> createRenderFor(RenderManager manager)
-        {
-            return new RenderPortalProjectile(manager);
-        }
+    public ResourceLocation getTextureLocation(EntityPortalProjectile pEntity) {
+        return pEntity.isOrange() ? txOrange : txBlue;
     }
 }
