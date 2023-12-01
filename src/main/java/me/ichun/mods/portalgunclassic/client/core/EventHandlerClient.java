@@ -1,25 +1,17 @@
 package me.ichun.mods.portalgunclassic.client.core;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import me.ichun.mods.portalgunclassic.client.portal.PortalStatus;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.packet.PacketSwapType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.ModelEvent;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.lwjgl.glfw.GLFW;
@@ -46,6 +38,7 @@ public class EventHandlerClient
     public double mY = 0D;
     public double mZ = 0D;
 
+    /*
     @SubscribeEvent
     public void onModelRegistry(ModelEvent.RegisterAdditional event)
     {
@@ -53,6 +46,7 @@ public class EventHandlerClient
         ModelLoader.setCustomModelResourceLocation(PortalGunClassic.PORTAL_GUN.get(), 1, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_orange", "inventory"));
         ModelLoader.setCustomModelResourceLocation(PortalGunClassic.PORTAL_CORE.get(), 0, new ModelResourceLocation(PortalGunClassic.MOD_ID, "pg_core", "inventory"));
     }
+     */
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event)
@@ -98,47 +92,56 @@ public class EventHandlerClient
         }
     }
 
+    /*
     @SubscribeEvent
     public void onRenderTick(TickEvent.RenderTickEvent event)
     {
         if(event.phase == TickEvent.Phase.END)
         {
-            Minecraft mc = Minecraft.getInstance();
-            if(mc.screen == null && !mc.options.hideGui && mc.player != null && (mc.player.getMainHandItem().getItem() == PortalGunClassic.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PortalGunClassic.PORTAL_GUN.get()))
-            {
-                //is holding a portal gun
 
-                GlStateManager._enableBlend();
-                GlStateManager._blendFunc(GlStateManager.SourceFactor.SRC_ALPHA.value, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA.value);
-
-                ScaledResolution reso = new ScaledResolution(mc);
-                double size = 40;
-                double x1 = reso.getScaledWidth() / 2D - size + 1;
-                double x2 = reso.getScaledWidth() / 2D + size + 1;
-                double y1 = reso.getScaledHeight() / 2D - size + 1;
-                double y2 = reso.getScaledHeight() / 2D + size + 1;
-
-                Tessellator tessellator = Tessellator.getInstance();
-                BufferBuilder bufferbuilder = tessellator.getBuffer();
-
-                mc.getTextureManager().bindForSetup(status != null && status.blue ? txLFull : txLEmpty);
-                bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-                bufferbuilder.pos(x2, y2, 0.0D).tex(1D, 1D).color(5, 130, 255, 255).endVertex();
-                bufferbuilder.pos(x2, y1, 0.0D).tex(1D, 0D).color(5, 130, 255, 255).endVertex();
-                bufferbuilder.pos(x1, y1, 0.0D).tex(0D, 0D).color(5, 130, 255, 255).endVertex();
-                bufferbuilder.pos(x1, y2, 0.0D).tex(0D, 1D).color(5, 130, 255, 255).endVertex();
-                tessellator.draw();
-
-                mc.getTextureManager().bindTexture(status != null && status.orange ? txRFull : txREmpty);
-                bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-                bufferbuilder.pos(x2, y2, 0.0D).tex(1D, 1D).color(255, 176, 6, 255).endVertex();
-                bufferbuilder.pos(x2, y1, 0.0D).tex(1D, 0D).color(255, 176, 6, 255).endVertex();
-                bufferbuilder.pos(x1, y1, 0.0D).tex(0D, 0D).color(255, 176, 6, 255).endVertex();
-                bufferbuilder.pos(x1, y2, 0.0D).tex(0D, 1D).color(255, 176, 6, 255).endVertex();
-                tessellator.draw();
-            }
         }
     }
+     */
+
+    public void renderPortalStatusOverlay(ForgeGui gui, PoseStack poseStack, float partialTick, int screenWidth, int screenHeight) {
+        Minecraft mc = Minecraft.getInstance();
+        if(mc.screen == null && !mc.options.hideGui && mc.player != null && (mc.player.getMainHandItem().getItem() == PortalGunClassic.PORTAL_GUN.get() || mc.player.getOffhandItem().getItem() == PortalGunClassic.PORTAL_GUN.get()))
+        {
+            //is holding a portal gun
+
+            gui.setupOverlayRenderState(true, false);
+            //RenderSystem.enableBlend();
+            //RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA.value, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA.value);
+
+            //ScaledResolution reso = new ScaledResolution(mc);
+            double size = 40;
+            double x1 = screenWidth / 2D - size + 1;
+            double x2 = screenWidth / 2D + size + 1;
+            double y1 = screenHeight / 2D - size + 1;
+            double y2 = screenHeight / 2D + size + 1;
+
+            Tesselator tessellator = Tesselator.getInstance();
+            BufferBuilder bufferbuilder = tessellator.getBuilder();
+
+            RenderSystem.setShaderTexture(0, status != null && status.blue ? txLFull : txLEmpty);
+            bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            bufferbuilder.vertex(x2, y2, 0.0D).uv(1F, 1F).color(5, 130, 255, 255).endVertex();
+            bufferbuilder.vertex(x2, y1, 0.0D).uv(1F, 0F).color(5, 130, 255, 255).endVertex();
+            bufferbuilder.vertex(x1, y1, 0.0D).uv(0F, 0F).color(5, 130, 255, 255).endVertex();
+            bufferbuilder.vertex(x1, y2, 0.0D).uv(0F, 1F).color(5, 130, 255, 255).endVertex();
+            tessellator.end();
+
+            RenderSystem.setShaderTexture(0, status != null && status.orange ? txRFull : txREmpty);
+            bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            bufferbuilder.vertex(x2, y2, 0.0D).uv(1F, 1F).color(255, 176, 6, 255).endVertex();
+            bufferbuilder.vertex(x2, y1, 0.0D).uv(1F, 0F).color(255, 176, 6, 255).endVertex();
+            bufferbuilder.vertex(x1, y1, 0.0D).uv(0F, 0F).color(255, 176, 6, 255).endVertex();
+            bufferbuilder.vertex(x1, y2, 0.0D).uv(0F, 1F).color(255, 176, 6, 255).endVertex();
+            tessellator.end();
+        }
+    }
+
+
 
     @SubscribeEvent
     public void onConnectToServerEvent(ClientPlayerNetworkEvent.LoggingIn event)

@@ -1,6 +1,7 @@
 package me.ichun.mods.portalgunclassic.common;
 
 import com.mojang.datafixers.types.Type;
+import com.mojang.logging.LogUtils;
 import me.ichun.mods.portalgunclassic.client.core.EventHandlerClient;
 import me.ichun.mods.portalgunclassic.client.core.ProxyClient;
 import me.ichun.mods.portalgunclassic.common.block.BlockPortal;
@@ -9,6 +10,7 @@ import me.ichun.mods.portalgunclassic.common.core.ProxyCommon;
 import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
 import me.ichun.mods.portalgunclassic.common.item.ItemPortalCore;
 import me.ichun.mods.portalgunclassic.common.item.ItemPortalGun;
+import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
 import me.ichun.mods.portalgunclassic.common.tileentity.TileEntityPortal;
 import net.minecraft.Util;
 import net.minecraft.resources.ResourceLocation;
@@ -31,23 +33,27 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import org.slf4j.Logger;
+
+import java.util.function.Supplier;
 
 @Mod(PortalGunClassic.MOD_ID)
 public class PortalGunClassic
 {
     public static final String MOD_ID = "portalgunclassic";
-    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MOD_ID);
-    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MOD_ID);
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
+    public static final Logger LOGGER = LogUtils.getLogger();
+    private static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MOD_ID);
+    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MOD_ID);
+    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final RegistryObject<Block> BLOCK_PORTAL = BLOCKS.register("portal", () ->
             new BlockPortal(BlockBehaviour.Properties.of(Material.DECORATION)
                     .strength(-1F, 1000000.0F)
                     .lightLevel(state -> 8 /* 0.5F? */)
                     .noOcclusion()
                     .noCollission()));
-    public static final RegistryObject<BlockEntityType<TileEntityPortal>> TILE_PORTAL = register("tile_portal", BlockEntityType.Builder.of(TileEntityPortal::new, BLOCK_PORTAL.get()));
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
-    public static final RegistryObject<Item> PORTAL_GUN = ITEMS.register("portalgun", () -> new ItemPortalGun(new Item.Properties().stacksTo(1).durability(0).tab(CreativeModeTab.TAB_TOOLS)));
+    public static final RegistryObject<BlockEntityType<TileEntityPortal>> TILE_PORTAL = register("tile_portal", TileEntityPortal::new, BLOCK_PORTAL);
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
+    public static final RegistryObject<Item> PORTAL_GUN = ITEMS.register("portalgun", () -> new ItemPortalGun(new Item.Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS)));
     public static final RegistryObject<Item> PORTAL_CORE = ITEMS.register("portal_core", () -> new ItemPortalCore(new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
     public static final String MOD_NAME = "PortalGunClassic";
     public static final String VERSION = "1.0.0";
@@ -78,11 +84,12 @@ public class PortalGunClassic
         BLOCKS.register(modEventBus);
         ENTITY_TYPES.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        SoundRegistry.register(modEventBus);
     }
 
-    private static <T extends BlockEntity> RegistryObject<BlockEntityType<T>> register(String pKey, BlockEntityType.Builder<T> pBuilder) {
+    private static <T extends BlockEntity> RegistryObject<BlockEntityType<T>> register(String pKey, BlockEntityType.BlockEntitySupplier<T> pFactory, Supplier<Block> pValidBlock) {
         Type<?> type = Util.fetchChoiceType(References.BLOCK_ENTITY, new ResourceLocation(MOD_ID, pKey).toString());
-        return BLOCK_ENTITY_TYPES.register(pKey, () -> pBuilder.build(type));
+        return BLOCK_ENTITY_TYPES.register(pKey, () -> BlockEntityType.Builder.of(pFactory, pValidBlock.get()).build(type));
     }
 
     private static <T extends Entity> RegistryObject<EntityType<T>> register(String pKey, EntityType.Builder<T> pBuilder) {

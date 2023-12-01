@@ -3,6 +3,7 @@ package me.ichun.mods.portalgunclassic.common.sounds;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -10,7 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class SoundRegistry
 {
 
-    public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, PortalGunClassic.MOD_ID);
+    private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, PortalGunClassic.MOD_ID);
     public static final RegistryObject<SoundEvent> ENTER = register("enter");
     public static final RegistryObject<SoundEvent> EXIT = register("exit");
     public static final RegistryObject<SoundEvent> FIZZLE = register("fizzle");
@@ -24,5 +25,9 @@ public class SoundRegistry
 
     private static RegistryObject<SoundEvent> register(String path){
         return SOUNDS.register(path, () -> new SoundEvent(new ResourceLocation(PortalGunClassic.MOD_ID, path)));
+    }
+
+    public static void register(IEventBus modEventBus){
+        SOUNDS.register(modEventBus);
     }
 }

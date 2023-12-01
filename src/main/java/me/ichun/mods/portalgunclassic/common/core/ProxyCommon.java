@@ -7,7 +7,9 @@ import me.ichun.mods.portalgunclassic.common.packet.PacketRequestTeleport;
 import me.ichun.mods.portalgunclassic.common.packet.PacketSwapType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 
@@ -33,7 +35,8 @@ public class ProxyCommon
                 PROTOCOL_VERSION::equals,
                 PROTOCOL_VERSION::equals
         );
-        MinecraftForge.EVENT_BUS.addListener((FMLCommonSetupEvent event) -> {
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modEventBus.addListener((FMLCommonSetupEvent event) -> {
             event.enqueueWork(() -> {
                 PortalGunClassic.channel.registerMessage(0, PacketSwapType.class, PacketSwapType::toBytes, PacketSwapType::new, PacketSwapType::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
                 PortalGunClassic.channel.registerMessage(1, PacketPortalStatus.class, PacketPortalStatus::toBytes, PacketPortalStatus::new, PacketPortalStatus::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));

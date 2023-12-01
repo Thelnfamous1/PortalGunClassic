@@ -23,7 +23,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraftforge.network.NetworkHooks;
 
 public class EntityPortalProjectile extends Entity
@@ -42,7 +41,7 @@ public class EntityPortalProjectile extends Entity
     {
         this(PortalGunClassic.PORTAL_PROJECTILE.get(), world);
         this.setOrange(isOrange);
-        shoot(entity, 4.999F);
+        shoot(entity, 3F); // original is 4.9999, but too high for vanilla packets
         moveTo(entity.getX(), entity.getEyeY() - (this.getBbWidth() / 2F), entity.getZ(), entity.getYRot(), entity.getXRot());
     }
 
@@ -58,9 +57,9 @@ public class EntityPortalProjectile extends Entity
 
     public void shoot(Entity entity, float velocity)
     {
-        float f = -Mth.sin(entity.getYRot() * 0.017453292F) * Mth.cos(entity.getXRot() * 0.017453292F);
-        float f1 = -Mth.sin((entity.getXRot()) * 0.017453292F);
-        float f2 = Mth.cos(entity.getYRot() * 0.017453292F) * Mth.cos(entity.getXRot() * 0.017453292F);
+        float f = -Mth.sin(entity.getYRot() * Mth.DEG_TO_RAD) * Mth.cos(entity.getXRot() * Mth.DEG_TO_RAD);
+        float f1 = -Mth.sin((entity.getXRot()) * Mth.DEG_TO_RAD);
+        float f2 = Mth.cos(entity.getYRot() * Mth.DEG_TO_RAD) * Mth.cos(entity.getXRot() * Mth.DEG_TO_RAD);
         this.shoot(f, f1, f2, velocity);
         /*
         this.motionX += entity.motionX;
@@ -94,8 +93,8 @@ public class EntityPortalProjectile extends Entity
          */
         this.setDeltaMovement(x, y, z);
         float f1 = Mth.sqrt((float) (x * x + z * z));
-        this.setYRot((float)(Mth.atan2(x, z) * (180D / Math.PI)));
-        this.setXRot((float)(Mth.atan2(y, f1) * (180D / Math.PI)));
+        this.setYRot((float)(Mth.atan2(x, z) * Mth.RAD_TO_DEG));
+        this.setXRot((float)(Mth.atan2(y, f1) * Mth.RAD_TO_DEG));
         this.yRotO = this.getYRot();
         this.xRotO = this.getXRot();
     }
@@ -258,7 +257,7 @@ public class EntityPortalProjectile extends Entity
                     BlockState iblockstate1 = level.getBlockState(blockpos);
                     Block block1 = iblockstate1.getBlock();
 
-                    if (iblockstate1.getCollisionShape(level, blockpos) != Shapes.empty())
+                    if (!iblockstate1.getCollisionShape(level, blockpos).isEmpty())
                     {
                         //if (block1.canCollideCheck(iblockstate1, true))
                         {
@@ -272,6 +271,7 @@ public class EntityPortalProjectile extends Entity
                                 }
                                 else
                                 {
+                                    PortalGunClassic.LOGGER.info("Creating portal at {}", clip.getLocation());
                                     createPortal(clip);
                                     discard();
                                     return;
@@ -290,9 +290,9 @@ public class EntityPortalProjectile extends Entity
          */
         Vec3 newPos = this.position().add(motion);
         float f = Mth.sqrt((float) (motion.x * motion.x + motion.z * motion.z));
-        this.setYRot((float) ((float)Mth.atan2(motion.x, motion.z) * (180D / Math.PI)));
+        this.setYRot((float) ((float)Mth.atan2(motion.x, motion.z) * Mth.RAD_TO_DEG));
 
-        for (this.setXRot((float)(Mth.atan2(motion.y, f) * (180D / Math.PI))); this.getXRot() - this.xRotO < -180.0F; this.yRotO -= 360.0F)
+        for (this.setXRot((float)(Mth.atan2(motion.y, f) * Mth.RAD_TO_DEG)); this.getXRot() - this.xRotO < -180.0F; this.yRotO -= 360.0F)
         {
         }
 
@@ -344,10 +344,12 @@ public class EntityPortalProjectile extends Entity
                 }
                 PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) level).set(level, isOrange(), rayTraceResult.getDirection().getAxis() != Direction.Axis.Y ? pos.below() : pos);
 
+                PortalGunClassic.LOGGER.info("Placed portal at: {}", pos);
                 level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), isOrange() ? SoundRegistry.OPEN_RED.get() : SoundRegistry.OPEN_BLUE.get(), SoundSource.BLOCKS, 0.3F, 1.0F);
             }
             else
             {
+                PortalGunClassic.LOGGER.info("Invalid portal placement: {}", pos);
                 level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), SoundRegistry.INVALID.get(), SoundSource.NEUTRAL, 0.5F, 1.0F);
             }
         }
@@ -358,13 +360,11 @@ public class EntityPortalProjectile extends Entity
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
-    /*
-    @Override
+    //@Override
     public int getBrightnessForRender()
     {
         return 15728880;
     }
-     */
 
     
     @Override

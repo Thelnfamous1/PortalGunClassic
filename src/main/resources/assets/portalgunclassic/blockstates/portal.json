@@ -1,5 +1,7 @@
 {
   "variants": {
-    "normal": { "model": "portalgunclassic:portal" }
+    "": {
+      "model": "portalgunclassic:block/portal"
+    }
   }
 }

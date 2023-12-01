@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import me.Thelnfamous1.portalgunclassic.IMessage;
 import me.Thelnfamous1.portalgunclassic.IMessageHandler;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
+import me.ichun.mods.portalgunclassic.common.item.ItemPortalGun;
 import me.ichun.mods.portalgunclassic.common.sounds.SoundRegistry;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -60,7 +61,12 @@ public class PacketSwapType implements IMessage
                     ItemStack is = player.getItemInHand(hand);
                     if(is.getItem() == PortalGunClassic.PORTAL_GUN.get())
                     {
-                        is.setDamageValue(is.getDamageValue() == 1 ? 0 : 1);
+                        //is.setDamageValue(is.getDamageValue() == 1 ? 0 : 1);
+                        if (ItemPortalGun.isOrange(is)) {
+                            ItemPortalGun.setBlue(is);
+                        } else {
+                            ItemPortalGun.setOrange(is);
+                        }
                     }
                 }
             }
@@ -78,7 +84,7 @@ public class PacketSwapType implements IMessage
                         ItemStack is = player.getItemInHand(hand);
                         if(is.getItem() == PortalGunClassic.PORTAL_GUN.get())
                         {
-                            PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).kill(player.level, is.getDamageValue() == 1);
+                            PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).kill(player.level, ItemPortalGun.isOrange(is));
                         }
                     }
                 }

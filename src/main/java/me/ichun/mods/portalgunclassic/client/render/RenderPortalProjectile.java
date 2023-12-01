@@ -1,23 +1,19 @@
 package me.ichun.mods.portalgunclassic.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import me.ichun.mods.portalgunclassic.common.PortalGunClassic;
 import me.ichun.mods.portalgunclassic.common.entity.EntityPortalProjectile;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.core.BlockPos;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.client.registry.IRenderFactory;
-
-import javax.annotation.Nullable;
 
 public class RenderPortalProjectile extends EntityRenderer<EntityPortalProjectile>
 {
@@ -31,60 +27,74 @@ public class RenderPortalProjectile extends EntityRenderer<EntityPortalProjectil
 
     @Override
     public void render(EntityPortalProjectile pEntity, float pEntityYaw, float pPartialTick, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight) {
-        super.render(pEntity, pEntityYaw, pPartialTick, pPoseStack, pBuffer, pPackedLight);
-    }
-
-    @Override
-    protected int getBlockLightLevel(EntityPortalProjectile pEntity, BlockPos pPos) {
-        return 15;
-    }
-
-    @Override
-    public void doRender(EntityPortalProjectile entity, double x, double y, double z, float entityYaw, float partialTicks)
-    {
-        if(entity.age < 1)
+        if(pEntity.age < 1)
         {
             return;
         }
 
-        GlStateManager.pushMatrix();
-        GlStateManager.translate((float)x, (float)y + 0.15F, (float)z);
-        GlStateManager.enableRescaleNormal();
-        GlStateManager.rotate(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-        GlStateManager.rotate((float)(this.renderManager.options.thirdPersonView == 2 ? -1 : 1) * this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-        GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
-        this.bindTexture(getEntityTexture(entity));
+        //GlStateManager.pushMatrix();
+        pPoseStack.pushPose();
+        //GlStateManager.translate((float)x, (float)y + 0.15F, (float)z);
+        pPoseStack.translate(0.0F, 0.15F, 0.0F);
+        //GlStateManager.enableRescaleNormal(); TODO
+        //GlStateManager.rotate(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+        pPoseStack.mulPose(Vector3f.YP.rotationDegrees(-this.entityRenderDispatcher.camera.getYRot()));
+        //GlStateManager.rotate((float)(this.renderManager.options.thirdPersonView == 2 ? -1 : 1) * this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+        pPoseStack.mulPose(Vector3f.XP.rotationDegrees((this.entityRenderDispatcher.options.getCameraType().isMirrored() ? -1 : 1) * -this.entityRenderDispatcher.camera.getXRot()));
+        //GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
+        pPoseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+        //bindTexture(getTextureLocation(pEntity));
+        //RenderSystem.setShaderTexture(0, getTextureLocation(pEntity));
 
+        /*
         if (this.renderOutlines)
         {
             GlStateManager.enableColorMaterial();
-            GlStateManager.enableOutlineMode(this.getTeamColor(entity));
+            GlStateManager.enableOutlineMode(this.getTeamColor(pEntity));
         }
+         */
 
         float f = 0F;
         float f1 = 1F;
         float f2 = 0F;
         float f3 = 1F;
 
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_NORMAL);
-        bufferbuilder.pos(-0.5D, -0.5D, 0.0D).tex((double)f, (double)f3).normal(0.0F, 1.0F, 0.0F).endVertex();
-        bufferbuilder.pos(0.5D, -0.5D, 0.0D).tex((double)f1, (double)f3).normal(0.0F, 1.0F, 0.0F).endVertex();
-        bufferbuilder.pos(0.5D, 0.5D, 0.0D).tex((double)f1, (double)f2).normal(0.0F, 1.0F, 0.0F).endVertex();
-        bufferbuilder.pos(-0.5D, 0.5D, 0.0D).tex((double)f, (double)f2).normal(0.0F, 1.0F, 0.0F).endVertex();
-        tessellator.draw();
+        //Tesselator tessellator = Tesselator.getInstance();
+        //BufferBuilder bufferbuilder = tessellator.getBuilder();
+        //bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        VertexConsumer bufferbuilder = pBuffer.getBuffer(RenderType.entityCutout(this.getTextureLocation(pEntity)));
+        PoseStack.Pose posestack$pose = pPoseStack.last();
+        Matrix4f pose = posestack$pose.pose();
+        Matrix3f normal = posestack$pose.normal();
 
+        bufferbuilder.vertex(pose, -0.5F, -0.5F, 0.0F).color(1F, 1F, 1F, 1F).uv(f, f3).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0.0F, 1.0F, 0.0F).endVertex();
+        bufferbuilder.vertex(pose, 0.5F, -0.5F, 0.0F).color(1F, 1F, 1F, 1F).uv(f1, f3).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0.0F, 1.0F, 0.0F).endVertex();
+        bufferbuilder.vertex(pose,0.5F, 0.5F, 0.0F).color(1F, 1F, 1F, 1F).uv(f1, f2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0.0F, 1.0F, 0.0F).endVertex();
+        bufferbuilder.vertex(pose,-0.5F, 0.5F, 0.0F).color(1F, 1F, 1F, 1F).uv(f, f2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(normal, 0.0F, 1.0F, 0.0F).endVertex();
+        //tessellator.end();
+
+        /*
         if (this.renderOutlines)
         {
             GlStateManager.disableOutlineMode();
             GlStateManager.disableColorMaterial();
         }
+         */
 
-        GlStateManager.disableRescaleNormal();
-        GlStateManager.popMatrix();
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+        //GlStateManager.disableRescaleNormal(); TODO
+        //GlStateManager.popMatrix();
+        pPoseStack.popPose();
+        //super.doRender(pEntity, x, y, z, entityYaw, partialTicks);
+        super.render(pEntity, pEntityYaw, pPartialTick, pPoseStack, pBuffer, pPackedLight);
     }
+
+    /*
+    @Override
+    public void doRender(EntityPortalProjectile entity, double x, double y, double z, float entityYaw, float partialTicks)
+    {
+
+    }
+     */
 
     @Override
     public ResourceLocation getTextureLocation(EntityPortalProjectile pEntity) {

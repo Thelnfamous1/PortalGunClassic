@@ -1,0 +1,17 @@
+{
+  "parent": "portalgunclassic:item/pg_blue",
+  "overrides": [
+    {
+      "predicate": {
+        "portalgunclassic:orange": 0
+      },
+      "model": "portalgunclassic:item/pg_blue"
+    },
+    {
+      "predicate": {
+        "portalgunclassic:orange": 1
+      },
+      "model": "portalgunclassic:item/pg_orange"
+    }
+  ]
+}

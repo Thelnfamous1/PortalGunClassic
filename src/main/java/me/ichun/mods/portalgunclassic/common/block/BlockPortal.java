@@ -127,7 +127,9 @@ public class BlockPortal extends BaseEntityBlock
 
     public static boolean canPlace(Level world, BlockPos pos, Direction sideHit, boolean isOrange)
     {
-        if(world.getBlockState(pos).getMaterial().isReplaceable() || world.getBlockEntity(pos) instanceof TileEntityPortal && ((TileEntityPortal)world.getBlockEntity(pos)).setup && ((TileEntityPortal)world.getBlockEntity(pos)).orange == isOrange)
+        if(world.getBlockState(pos).getMaterial().isReplaceable()
+                || world.getBlockEntity(pos) instanceof TileEntityPortal tilePortal
+                && tilePortal.setup && tilePortal.orange == isOrange)
         {
             if(sideHit.getAxis() == Direction.Axis.Y) //1 block portal
             {
@@ -136,7 +138,11 @@ public class BlockPortal extends BaseEntityBlock
             else
             {
                 BlockPos posDown = pos.below();
-                return world.getBlockState(pos).isFaceSturdy(world, pos, sideHit) && (world.getBlockState(posDown).getMaterial().isReplaceable() || world.getBlockEntity(posDown) instanceof TileEntityPortal && ((TileEntityPortal)world.getBlockEntity(posDown)).setup && ((TileEntityPortal)world.getBlockEntity(posDown)).orange == isOrange) && world.getBlockState(posDown).isFaceSturdy(world, posDown, sideHit);
+                return world.getBlockState(pos).isFaceSturdy(world, pos, sideHit)
+                        && (world.getBlockState(posDown).getMaterial().isReplaceable()
+                        || world.getBlockEntity(posDown) instanceof TileEntityPortal tilePortal
+                        && tilePortal.setup && tilePortal.orange == isOrange)
+                        && world.getBlockState(posDown).isFaceSturdy(world, posDown, sideHit);
             }
         }
         return false;
