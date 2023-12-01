@@ -19,10 +19,10 @@ import org.lwjgl.glfw.GLFW;
 
 public class EventHandlerClient
 {
-    public static final ResourceLocation txLEmpty = new ResourceLocation("portalgunclassic", "textures/overlay/lempty.png");
-    public static final ResourceLocation txLFull = new ResourceLocation("portalgunclassic", "textures/overlay/lfull.png");
-    public static final ResourceLocation txREmpty = new ResourceLocation("portalgunclassic", "textures/overlay/rempty.png");
-    public static final ResourceLocation txRFull = new ResourceLocation("portalgunclassic", "textures/overlay/rfull.png");
+    public static final ResourceLocation txLEmpty = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/overlay/lempty.png");
+    public static final ResourceLocation txLFull = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/overlay/lfull.png");
+    public static final ResourceLocation txREmpty = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/overlay/rempty.png");
+    public static final ResourceLocation txRFull = new ResourceLocation(PortalGunClassic.MOD_ID, "textures/overlay/rfull.png");
 
 
     public KeyMapping keySwitch = new KeyMapping("key.portalgunclassic.switch", GLFW.GLFW_KEY_G, "key.categories.portalgun");

@@ -79,7 +79,7 @@ public class PortalSavedData extends SavedData
             {
                 ResourceKey<Level> dimension = DimensionType.parseLegacy(new Dynamic<>(NbtOps.INSTANCE, dimTag.get("dimension")))
                         .resultOrPartial(LOGGER::error)
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid map dimension: " + dimTag.get("dim")));
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid portal dimension: " + dimTag.get("dim")));
                 portalSavedData.portalInfo.put(dimension, map);
             }
         }
