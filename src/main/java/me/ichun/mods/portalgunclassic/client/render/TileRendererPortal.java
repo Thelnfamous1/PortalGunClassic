@@ -70,7 +70,7 @@ public class TileRendererPortal implements BlockEntityRenderer<TileEntityPortal>
             //Tesselator tessellator = Tesselator.getInstance();
             //BufferBuilder bufferbuilder = tessellator.getBuilder();
             //bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-            VertexConsumer bufferbuilder = pBufferSource.getBuffer(RenderType.beaconBeam(te.face.getAxis() == Direction.Axis.Y ? (te.orange ? txOrangeY : txBlueY) : te.top ? (te.orange ? txOrangeTop : txBlueTop) : te.orange ? txOrangeBtm : txBlueBtm, false));
+            VertexConsumer bufferbuilder = pBufferSource.getBuffer(RenderType.entityCutout(te.face.getAxis() == Direction.Axis.Y ? (te.orange ? txOrangeY : txBlueY) : te.top ? (te.orange ? txOrangeTop : txBlueTop) : te.orange ? txOrangeBtm : txBlueBtm));
             Matrix4f pose = pPoseStack.last().pose();
             Matrix3f normal = pPoseStack.last().normal();
             bufferbuilder.vertex(pose, -0.5F, -0.5F, 0.0F).color(1F, 1F, 1F, 1F).uv(0F, 1F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(15728880).normal(normal, 0.0F, 0.0F, 0.0F).endVertex();
