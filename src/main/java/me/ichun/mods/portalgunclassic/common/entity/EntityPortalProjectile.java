@@ -271,7 +271,6 @@ public class EntityPortalProjectile extends Entity
                                 }
                                 else
                                 {
-                                    PortalGunClassic.LOGGER.info("Creating portal at {}", clip.getLocation());
                                     createPortal(clip);
                                     discard();
                                     return;
@@ -344,12 +343,10 @@ public class EntityPortalProjectile extends Entity
                 }
                 PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) level).set(level, isOrange(), rayTraceResult.getDirection().getAxis() != Direction.Axis.Y ? pos.below() : pos);
 
-                PortalGunClassic.LOGGER.info("Placed portal at: {}", pos);
                 level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), isOrange() ? SoundRegistry.OPEN_RED.get() : SoundRegistry.OPEN_BLUE.get(), SoundSource.BLOCKS, 0.3F, 1.0F);
             }
             else
             {
-                PortalGunClassic.LOGGER.info("Invalid portal placement: {}", pos);
                 level.playSound(null, this.getX(), this.getY(0.5F), this.getZ(), SoundRegistry.INVALID.get(), SoundSource.NEUTRAL, 0.5F, 1.0F);
             }
         }

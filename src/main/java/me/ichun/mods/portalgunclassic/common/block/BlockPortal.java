@@ -102,7 +102,7 @@ public class BlockPortal extends BaseEntityBlock
             {
                 if(portal.face.getAxis() == Direction.Axis.Y)
                 {
-                    if(!world.getBlockState(pos).isFaceSturdy(world, pos, portal.face))
+                    if(!isSideSolid(world, pos, portal.face))
                     {
                         PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) world).kill(world, portal.orange);
                         world.removeBlock(pos, false);
@@ -111,7 +111,7 @@ public class BlockPortal extends BaseEntityBlock
                 else
                 {
                     BlockPos other = portal.top ? pos.below() : pos.above();
-                    if(!(world.getBlockState(pos).isFaceSturdy(world, pos, portal.face) && world.getBlockState(other).isFaceSturdy(world, other, portal.face)) || world.getBlockState(other).getBlock() != this)
+                    if(!(isSideSolid(world, pos, portal.face) && isSideSolid(world, other, portal.face)) || world.getBlockState(other).getBlock() != this)
                     {
                         PortalGunClassic.eventHandlerServer.getSaveData((ServerLevel) world).kill(world, portal.orange);
                         world.removeBlock(pos, false);
@@ -133,19 +133,25 @@ public class BlockPortal extends BaseEntityBlock
         {
             if(sideHit.getAxis() == Direction.Axis.Y) //1 block portal
             {
-                return world.getBlockState(pos).isFaceSturdy(world, pos, sideHit);
+                return isSideSolid(world, pos, sideHit);
             }
             else
             {
                 BlockPos posDown = pos.below();
-                return world.getBlockState(pos).isFaceSturdy(world, pos, sideHit)
+                return isSideSolid(world, pos, sideHit)
                         && (world.getBlockState(posDown).getMaterial().isReplaceable()
                         || world.getBlockEntity(posDown) instanceof TileEntityPortal tilePortal
                         && tilePortal.setup && tilePortal.orange == isOrange)
-                        && world.getBlockState(posDown).isFaceSturdy(world, posDown, sideHit);
+                        && isSideSolid(world, posDown, sideHit);
             }
         }
         return false;
+    }
+
+    private static boolean isSideSolid(Level world, BlockPos pos, Direction sideHit) {
+        BlockPos offset = pos.offset(sideHit.getNormal().multiply(-1));
+        BlockState blockState = world.getBlockState(offset);
+        return blockState.isFaceSturdy(world, offset, sideHit);
     }
 
 

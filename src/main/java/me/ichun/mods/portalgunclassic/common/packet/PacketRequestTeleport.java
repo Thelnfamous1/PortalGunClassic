@@ -50,19 +50,17 @@ public class PacketRequestTeleport implements IMessage
         {
             ServerPlayer player = ctx.get().getSender();
             BlockEntity te = player.level.getBlockEntity(message.pos);
-            if(te instanceof TileEntityPortal)
+            if(te instanceof TileEntityPortal portalCurrent)
             {
-                TileEntityPortal portalCurrent = (TileEntityPortal)te;
                 if(PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).portalInfo.containsKey(player.level.dimension()))
                 {
                     PortalInfo info = PortalGunClassic.eventHandlerServer.getSaveData(player.getLevel()).portalInfo.get(player.level.dimension()).get(portalCurrent.orange ? "blue" : "orange");
                     if(info != null)
                     {
                         te = player.level.getBlockEntity(info.pos);
-                        if(te instanceof TileEntityPortal)
+                        if(te instanceof TileEntityPortal portalDest)
                         {
                             //There is a pair! We can teleport!
-                            TileEntityPortal portalDest = (TileEntityPortal)te;
 
                             portalCurrent.teleport(player, portalDest);
 
