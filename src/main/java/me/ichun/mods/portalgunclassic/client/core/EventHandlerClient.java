@@ -8,6 +8,7 @@ import me.ichun.mods.portalgunclassic.common.packet.PacketSwapType;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -123,6 +124,7 @@ public class EventHandlerClient
             Tesselator tessellator = Tesselator.getInstance();
             BufferBuilder bufferbuilder = tessellator.getBuilder();
 
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, status != null && status.blue ? txLFull : txLEmpty);
             bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             bufferbuilder.vertex(x2, y2, 0.0D).uv(1F, 1F).color(5, 130, 255, 255).endVertex();
@@ -131,6 +133,7 @@ public class EventHandlerClient
             bufferbuilder.vertex(x1, y2, 0.0D).uv(0F, 1F).color(5, 130, 255, 255).endVertex();
             tessellator.end();
 
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, status != null && status.orange ? txRFull : txREmpty);
             bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
             bufferbuilder.vertex(x2, y2, 0.0D).uv(1F, 1F).color(255, 176, 6, 255).endVertex();
